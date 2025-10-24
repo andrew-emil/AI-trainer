@@ -26,4 +26,4 @@ EXPOSE 8000
 
 # Set entrypoint and command
 ENTRYPOINT ["/usr/local/bin/php-fpm-entrypoint"]
-CMD ["php-fpm"]
+# CMD ["php-fpm"]
