@@ -1,0 +1,27 @@
+#!/bin/sh
+set -e
+
+echo "📦 Starting Laravel container..."
+
+# Wait for PostgreSQL to be ready
+echo "⏳ Waiting for PostgreSQL at ${DB_HOST}:${DB_PORT}..."
+until nc -z "$DB_HOST" "$DB_PORT"; do
+  echo "   ↳ Still waiting..."
+  sleep 2
+done
+echo "✅ PostgreSQL is ready!"
+
+# Run migrations
+echo "🚀 Running migrations..."
+php artisan migrate --force || echo "⚠️ Migration failed or already up to date."
+
+# Cache configs and routes
+php artisan config:cache
+php artisan route:cache
+
+# Fix permissions
+chmod -R 775 storage bootstrap/cache
+chown -R www-data:www-data storage bootstrap/cache
+
+echo "✅ Laravel is ready! Starting server..."
+exec php artisan serve --host=0.0.0.0 --port=8000
