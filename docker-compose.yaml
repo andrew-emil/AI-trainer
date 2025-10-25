@@ -24,7 +24,7 @@ services:
 
   # ----------------- Laravel Service -----------------
   laravel-service:
-    build: ./services/laravel/ai-trainer
+    build: ./services/laravel/users
     container_name: laravel_service
     depends_on:
       - postgres

@@ -7,38 +7,32 @@ use Illuminate\Validation\Rule;
 
 class UserRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        // You can add your auth logic here if needed
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array|string>
-     */
     public function rules(): array
     {
-        $userId = $this->route('user')?->id; // For update requests
+        $userId = $this->route('user')?->id; // for update routes
+
+        // Determine if this is a create or update request
+        $isCreate = $this->isMethod('post');
 
         return [
-            'name' => 'required|string|max:255',
+            'name' => $isCreate ? 'required|string|max:255' : 'sometimes|string|max:255',
             'email' => [
-                'required',
+                $isCreate ? 'required' : 'sometimes',
                 'email',
                 Rule::unique('users', 'email')->ignore($userId),
             ],
-            'password' => $this->isMethod('post')
+            'password' => $isCreate
                 ? 'required|string|min:8'
                 : 'sometimes|string|min:8',
             'gender' => ['nullable', Rule::in(['male', 'female'])],
-            'birth_date' => $this->isMethod('post') ? 'required|date' : 'sometimes|date',
-            'heigth_cm' => $this->isMethod('post') ? 'required|numeric' : 'sometimes|numeric',
-            'weight_kg' => $this->isMethod('post') ? 'required|numeric' : 'sometimes|numeric',
+            'birth_date' => $isCreate ? 'required|date' : 'sometimes|date',
+            'heigth_cm' => $isCreate ? 'required|numeric' : 'sometimes|numeric',
+            'weight_kg' => $isCreate ? 'required|numeric' : 'sometimes|numeric',
             'body_fat_percentage' => 'nullable|numeric',
             'goal' => ['nullable', Rule::in(['lose_weight', 'maintain_weight', 'gain_muscle', 'body_recomp'])],
         ];
