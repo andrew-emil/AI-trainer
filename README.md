@@ -1,3 +1,16 @@
+## Getting Started
+
+This project is a starting point for a Flutter application.
+
+A few resources to get you started if this is your first Flutter project:
+
+- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
+- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+
+For help getting started with Flutter development, view the
+[online documentation](https://docs.flutter.dev/), which offers tutorials,
+samples, guidance on mobile development, and a full API reference.
+=======
 # 🌐 Fr3on fit
 
 ![Docker](https://img.shields.io/badge/Docker-Ready-blue?logo=docker)
@@ -117,3 +130,4 @@ Run individual services locally while connecting to others running in Docker:
 - 🧪 Passing unit & integration tests  
 
 💬 For support or questions, please contact the **lead architect** or post in the **#dev-support Slack channel**.
+>>>>>>> 61220c3ee8a05f1353b798d1bb289fb9b9f7af89
