@@ -50,15 +50,16 @@ services:
   #   ports:
   #     - "5000:5000"
 
-  # nest-service:
-  #   build: ./services/nestJS
-  #   container_name: nest_service
-  #   depends_on:
-  #     - mongo
-  #   environment:
-  #     MONGO_URI: mongodb://mongo:27017/nestdb
-  #   ports:
-  #     - "3000:3000"
+  nest-service:
+    build: ./services/nestJS
+    container_name: nest_service
+    depends_on:
+      - mongo
+      - postgres
+    environment:
+      MONGO_URI: mongodb://mongo:27017/nestdb
+    ports:
+      - "3000:3000"
 
   # ai-models:
   #   build: ./ai-models
@@ -73,7 +74,7 @@ services:
     depends_on:
       # - dotnet-service
       - laravel-service
-      # - nest-service
+      - nest-service
       # - ai-models
     ports:
       - "8080:80"

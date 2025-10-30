@@ -1,1 +1,0 @@
-this folder for docker , kubernetes and other devops

@@ -1,0 +1,57 @@
+services:
+  # Databases
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: laravel_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodata:/data/db
+
+  # Nest apps (one service per app)
+  chatbot:
+    build:
+      context: .
+      dockerfile: apps/chatbot/Dockerfile
+      args:
+        APP_NAME: chatbot
+    environment:
+      MONGO_URI: mongodb://mongo:27017/nestdb
+    depends_on:
+      - mongo
+      - postgres
+    ports:
+      - "3001:3000"
+
+  stream-service:
+    build:
+      context: .
+      dockerfile: apps/stream-service/Dockerfile
+      args:
+        APP_NAME: stream-service
+    ports:
+      - "3002:3000"
+
+  workout:
+    build:
+      context: .
+      dockerfile: apps/workout/Dockerfile
+      args:
+        APP_NAME: workout
+    ports:
+      - "3003:3000"
+
+
+volumes:
+  pgdata:
+  mongodata:

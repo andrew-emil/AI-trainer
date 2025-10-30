@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json.schemastore.org/nest-cli",
+  "collection": "@nestjs/schematics",
+  "monorepo": true,
+  "root": ".",
+  "compilerOptions": {
+    "deleteOutDir": true,
+    "webpack": true,
+    "tsConfigPath": "./tsconfig.json"
+  },
+  "projects": {
+    "chatbot": {
+      "type": "application",
+      "root": "apps/chatbot",
+      "entryFile": "main",
+      "sourceRoot": "apps/chatbot/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/chatbot/tsconfig.app.json"
+      }
+    },
+    "contracts": {
+      "type": "library",
+      "root": "libs/contracts",
+      "entryFile": "index",
+      "sourceRoot": "libs/contracts/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/contracts/tsconfig.lib.json"
+      }
+    },
+    "stream-service": {
+      "type": "application",
+      "root": "apps/stream-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/stream-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/stream-service/tsconfig.app.json"
+      }
+    },
+    "workout": {
+      "type": "application",
+      "root": "apps/workout",
+      "entryFile": "main",
+      "sourceRoot": "apps/workout/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/workout/tsconfig.app.json"
+      }
+    }
+  }
+}
