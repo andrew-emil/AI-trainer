@@ -1,15 +1,5 @@
 services:
   # Databases
-  postgres:
-    image: postgres:latest
-    environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin123
-      POSTGRES_DB: laravel_db
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
 
   mongo:
     image: mongo:latest
@@ -20,38 +10,64 @@ services:
 
   # Nest apps (one service per app)
   chatbot:
+    container_name: chatbot
     build:
       context: .
-      dockerfile: apps/chatbot/Dockerfile
       args:
         APP_NAME: chatbot
     environment:
-      MONGO_URI: mongodb://mongo:27017/nestdb
+      - APP_NAME=chatbot
+      - MONGO_URI=mongodb://mongo:27017/nestdb
+      - NODE_ENV=development
+    volumes:
+      - ./:/usr/src/app:delegated # mount repo into container (fast on Linux)
+      - /usr/src/app/node_modules
     depends_on:
       - mongo
-      - postgres
     ports:
       - "3001:3000"
+    command: ["sh", "-c", "npm run start:dev chatbot"]
+    restart: unless-stopped
 
   stream-service:
+    container_name: stream-service
     build:
       context: .
-      dockerfile: apps/stream-service/Dockerfile
       args:
         APP_NAME: stream-service
+    environment:
+      - APP_NAME=stream-service
+      - MONGO_URI=mongodb://mongo:27017/nestdb
+      - NODE_ENV=development
+    volumes:
+      - ./:/usr/src/app:delegated
+      - /usr/src/app/node_modules
+    depends_on:
+      - mongo
     ports:
       - "3002:3000"
+    command: ["sh", "-c", "npm run start:dev stream-service"]
+    restart: unless-stopped
 
   workout:
+    container_name: workout
     build:
       context: .
-      dockerfile: apps/workout/Dockerfile
       args:
         APP_NAME: workout
+    environment:
+      - APP_NAME=workout
+      - MONGO_URI=mongodb://mongo:27017/nestdb
+      - NODE_ENV=development
+    volumes:
+      - ./:/usr/src/app:delegated
+      - /usr/src/app/node_modules
+    depends_on:
+      - mongo
     ports:
       - "3003:3000"
-
+    command: ["sh", "-c", "npm run start:dev workout"]
+    restart: unless-stopped
 
 volumes:
-  pgdata:
   mongodata:
