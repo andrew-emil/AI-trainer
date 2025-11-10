@@ -61,7 +61,7 @@ class UserRpcWorker extends Command
         $this->info(" [*] Waiting for messages...");
 
         try {
-            while (true) {
+            while ($connection->isConnected()) {
                 // Wait indefinitely for messages
                 $channel->wait();
             }
