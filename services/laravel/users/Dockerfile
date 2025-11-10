@@ -1,29 +1,23 @@
-FROM php:8.3-fpm
+# ---- Base Image ----
+FROM php:8.2-cli
 
-# Install dependencies and PostgreSQL client
+# ---- System Dependencies ----
 RUN apt-get update && apt-get install -y \
-    git curl zip unzip libpq-dev netcat-traditional \
-    && docker-php-ext-install pdo pdo_pgsql
+    git curl zip unzip libpq-dev libzip-dev \
+    && docker-php-ext-install pdo pdo_pgsql bcmath zip
 
-# Install Composer
+# ---- Composer ----
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Set working directory
-WORKDIR /var/www
+# ---- Set Working Directory ----
+WORKDIR /app
 
-# Copy project files
+# ---- Copy Files ----
 COPY . .
 
-# Install PHP dependencies and generate app key
-RUN composer install --no-interaction --prefer-dist \
-    && php artisan key:generate
+# ---- Install Dependencies ----
+RUN composer install --no-dev --optimize-autoloader
+RUN docker-php-ext-install sockets
 
-# Copy entrypoint
-COPY ./scripts/php-fpm-entrypoint /usr/local/bin/php-fpm-entrypoint
-RUN chmod +x /usr/local/bin/php-fpm-entrypoint
-
-EXPOSE 8000
-
-# Set entrypoint and command
-ENTRYPOINT ["/usr/local/bin/php-fpm-entrypoint"]
-# CMD ["php-fpm"]
+# ---- Command: Run RPC Worker ----
+CMD ["php", "artisan", "rabbitmq:rpc-user"]

@@ -13,6 +13,8 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    networks:
+      - trainer_net
 
   mongo:
     image: mongo:6
@@ -21,13 +23,55 @@ services:
       - "27017:27017"
     volumes:
       - mongodata:/data/db
+    networks:
+      - trainer_net
 
-  # ----------------- Laravel Service -----------------
-  laravel-service:
-    build: ./services/laravel/users
-    container_name: laravel_service
+  # ----------------- RabbitMQ -----------------
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"    # RabbitMQ broker
+      - "15672:15672"  # Management dashboard
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin123
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - trainer_net
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "status"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  # ----------------- Laravel Gateway -----------------
+  gateway-service:
+    build: ./services/gateway
+    container_name: gateway_service
     depends_on:
-      - postgres
+      - rabbitmq
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: admin
+      RABBITMQ_PASSWORD: admin123
+      APP_ENV: local
+      APP_DEBUG: "true"
+    ports:
+      - "8080:8000"
+    networks:
+      - trainer_net
+
+  # ----------------- Laravel User Service -----------------
+  user-service:
+    build: ./services/laravel/users
+    container_name: user_service
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_started
     environment:
       DB_CONNECTION: pgsql
       DB_HOST: postgres_db
@@ -35,52 +79,22 @@ services:
       DB_DATABASE: laravel_db
       DB_USERNAME: admin
       DB_PASSWORD: admin123
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: admin
+      RABBITMQ_PASSWORD: admin123
+      JWT_SECRET: test
     ports:
-      - "8000:8000"
+      - "8001:8000"
+    networks:
+      - trainer_net
 
-  # ----------------- Optional Services -----------------
-  # dotnet-service:
-  #   build: ./services/dotnet
-  #   container_name: dotnet_service
-  #   depends_on:
-  #     - postgres
-  #   environment:
-  #     ASPNETCORE_URLS: http://+:5000
-  #     ConnectionStrings__Default: Host=postgres;Database=trainer_main;Username=admin;Password=admin123
-  #   ports:
-  #     - "5000:5000"
-
-  nest-service:
-    build: ./services/nestJS
-    container_name: nest_service
-    depends_on:
-      - mongo
-      - postgres
-    environment:
-      MONGO_URI: mongodb://mongo:27017/nestdb
-    ports:
-      - "3000:3000"
-
-  # ai-models:
-  #   build: ./ai-models
-  #   container_name: ai_models
-  #   ports:
-  #     - "8001:8001"
-
- # ----------------- API Gateway -----------------
-  api-gateway:
-    image: nginx:1.25
-    container_name: api_gateway
-    depends_on:
-      # - dotnet-service
-      - laravel-service
-      - nest-service
-      # - ai-models
-    ports:
-      - "8080:80"
-    volumes:
-      - ./devops/nginx.conf:/etc/nginx/nginx.conf:ro
+networks:
+  trainer_net:
+    driver: bridge
 
 volumes:
   pgdata:
   mongodata:
+  rabbitmq_data:
+

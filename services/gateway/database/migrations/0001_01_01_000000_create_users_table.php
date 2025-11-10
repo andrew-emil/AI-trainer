@@ -17,13 +17,6 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->enum('gender', ['male', 'female'])->nullable();
-            $table->date('birth_date');
-            $table->float('heigth_cm');
-            $table->float('weight_kg');
-            $table->float('body_fat_percentage')->nullable();
-            $table->enum('goal', ['lose_weight', 'maintain_weight', 'gain_muscle', 'body_recomp'])->nullable();
-            $table->json('roles')->nullable(); // store array of roles, e.g. ["USER","ADMIN"]
             $table->rememberToken();
             $table->timestamps();
         });
