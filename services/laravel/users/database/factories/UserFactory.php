@@ -23,11 +23,27 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        $gender = fake()->randomElement(['male', 'female']);
+        $birthDate = fake()->dateTimeBetween('-60 years', '-18 years')->format('Y-m-d');
+        $heightCm = $gender === 'male' ? fake()->numberBetween(165, 200) : fake()->numberBetween(150, 180);
+        $weightKg = $gender === 'male' ? fake()->numberBetween(60, 120) : fake()->numberBetween(45, 100);
+        $bodyFatPercentage = $gender === 'male'
+            ? fake()->randomFloat(2, 10, 25)
+            : fake()->randomFloat(2, 15, 30);
+        $goal = fake()->randomElement(['lose_weight', 'maintain_weight', 'gain_muscle', 'body_recomp']);
+
         return [
-            'name' => fake()->name(),
+            'name' => fake()->name($gender),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
+            'password' => static::$password ??= Hash::make('123'),
+            'gender' => $gender,
+            'birth_date' => $birthDate,
+            'height_cm' => $heightCm,
+            'weight_kg' => $weightKg,
+            'body_fat_percentage' => $bodyFatPercentage,
+            'goal' => $goal,
+            'roles' => ['USER'],
             'remember_token' => Str::random(10),
         ];
     }
@@ -37,7 +53,7 @@ class UserFactory extends Factory
      */
     public function unverified(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'email_verified_at' => null,
         ]);
     }

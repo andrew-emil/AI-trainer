@@ -19,11 +19,11 @@ return new class extends Migration
             $table->string('password');
             $table->enum('gender', ['male', 'female'])->nullable();
             $table->date('birth_date');
-            $table->float('heigth_cm');
+            $table->float('height_cm');
             $table->float('weight_kg');
             $table->float('body_fat_percentage')->nullable();
             $table->enum('goal', ['lose_weight', 'maintain_weight', 'gain_muscle', 'body_recomp'])->nullable();
-            $table->json('roles')->nullable(); // store array of roles, e.g. ["USER","ADMIN"]
+            $table->json('roles')->nullable()->default(json_encode(['USER']));
             $table->rememberToken();
             $table->timestamps();
         });

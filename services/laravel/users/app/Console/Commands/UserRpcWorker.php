@@ -2,7 +2,9 @@
 
 namespace App\Console\Commands;
 
+use App\Services\UserService;
 use Illuminate\Console\Command;
+use Illuminate\Validation\ValidationException;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
 use PhpAmqpLib\Exception\AMQPTimeoutException;
@@ -75,23 +77,57 @@ class UserRpcWorker extends Command
             $this->info(" [*] Worker stopped.");
         }
     }
-
-    protected function processRequest($request)
+    protected function processRequest(array $request): array
     {
-        switch ($request['action'] ?? null) {
-            case 'get_user':
-                return [
-                    'status' => 'success',
-                    'data' => [
-                        'id' => $request['id'],
-                        'name' => 'John Doe',
-                        'email' => 'john@example.com',
-                    ],
-                ];
-            case 'ping':
-                return ['status' => 'ok', 'message' => 'pong'];
-            default:
-                return ['status' => 'error', 'message' => 'Unknown action'];
+        $service = new UserService();
+
+        try {
+            switch ($request['action'] ?? null) {
+                case 'get_users':
+                    $users = $service->getAllUsers();
+                    return ['status' => 'success', 'data' => $users];
+
+                case 'get_user':
+                    $user = $service->getUserById((int) $request['id']);
+                    if (!$user) {
+                        return ['status' => 'error', 'message' => 'User not found'];
+                    }
+                    return ['status' => 'success', 'data' => $user];
+
+                case 'create_user':
+                    $user = $service->createUser($request['data']);
+                    return ['status' => 'success', 'data' => $user];
+
+                case 'update_user':
+                    $user = $service->updateUser((int) $request['id'], $request['data']);
+                    if (!$user) {
+                        return ['status' => 'error', 'message' => 'User not found'];
+                    }
+                    return ['status' => 'success', 'data' => $user];
+
+                case 'delete_user':
+                    $deleted = $service->deleteUser((int) $request['id']);
+                    if (!$deleted) {
+                        return ['status' => 'error', 'message' => 'User not found'];
+                    }
+                    return ['status' => 'success', 'message' => 'User deleted successfully'];
+
+                case 'ping':
+                    return ['status' => 'ok', 'message' => 'pong'];
+
+                default:
+                    return ['status' => 'error', 'message' => 'Unknown action'];
+            }
+        } catch (ValidationException $e) {
+            return [
+                'status' => 'validation_error',
+                'errors' => $e->errors(),
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ];
         }
     }
 }
