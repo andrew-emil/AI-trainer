@@ -3,8 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-use App\Http\Controllers\GeneralController;
+use App\Http\Controllers\UserController;
 
-// Route::any('{any}', [GeneralController::class, 'handle'])->where('any', '.*');
 
-Route::get('/users/{id}', [GeneralController::class, 'getUser']);
+Route::apiResource('users', UserController::class);
