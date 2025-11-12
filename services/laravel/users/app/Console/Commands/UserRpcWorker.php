@@ -2,9 +2,12 @@
 
 namespace App\Console\Commands;
 
+use App\Services\AuthenticationService;
 use App\Services\UserService;
+use App\Services\AuthorizationService;
 use Illuminate\Console\Command;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Auth\Access\AuthorizationException;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
 use PhpAmqpLib\Exception\AMQPTimeoutException;
@@ -13,6 +16,16 @@ class UserRpcWorker extends Command
 {
     protected $signature = 'rabbitmq:rpc-user';
     protected $description = 'User service RPC listener for RabbitMQ';
+
+    protected AuthenticationService $authenticationService;
+    protected AuthorizationService $authorizationService;
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->authenticationService = new AuthenticationService();
+        $this->authorizationService = new AuthorizationService();
+    }
 
     public function handle()
     {
@@ -29,13 +42,11 @@ class UserRpcWorker extends Command
             null,        // login response
             'en_US',     // locale
             0,           // connection_timeout
-            120,         // read_write_timeout (>= 2x heartbeat)
+            120,         // read_write_timeout
             null,        // context
             0,           // keepalive
             60           // heartbeat
         );
-
-
 
         $channel = $connection->channel();
         $queueName = 'user_service_rpc_queue';
@@ -64,7 +75,6 @@ class UserRpcWorker extends Command
 
         try {
             while ($connection->isConnected()) {
-                // Wait indefinitely for messages
                 $channel->wait();
             }
         } catch (AMQPTimeoutException $e) {
@@ -77,40 +87,76 @@ class UserRpcWorker extends Command
             $this->info(" [*] Worker stopped.");
         }
     }
+
     protected function processRequest(array $request): array
     {
-        $service = new UserService();
-
         try {
-            switch ($request['action'] ?? null) {
-                case 'get_users':
-                    $users = $service->getAllUsers();
-                    return ['status' => 'success', 'data' => $users];
+            $action = $request['action'] ?? null;
+            $service = new UserService($this->authorizationService, $this->authenticationService);
 
-                case 'get_user':
-                    $user = $service->getUserById((int) $request['id']);
-                    if (!$user) {
-                        return ['status' => 'error', 'message' => 'User not found'];
-                    }
-                    return ['status' => 'success', 'data' => $user];
-
+            switch ($action) {
                 case 'create_user':
-                    $user = $service->createUser($request['data']);
+                    // Public endpoint, no JWT required
+                    $user = $service->createUser($request['data'] ?? []);
                     return ['status' => 'success', 'data' => $user];
+                case 'login':
+                    // Public endpoint, no JWT required
+                    $email = $request['data']['email'] ?? '';
+                    $password = $request['data']['password'] ?? '';
+                    $result = $service->login($email, $password);
+                    if (!$result) {
+                        return ['status' => 'error', 'message' => 'Invalid credentials'];
+                    }
+                    return ['status' => 'success', 'data' => $result];
 
                 case 'update_user':
-                    $user = $service->updateUser((int) $request['id'], $request['data']);
-                    if (!$user) {
-                        return ['status' => 'error', 'message' => 'User not found'];
-                    }
-                    return ['status' => 'success', 'data' => $user];
-
                 case 'delete_user':
-                    $deleted = $service->deleteUser((int) $request['id']);
-                    if (!$deleted) {
-                        return ['status' => 'error', 'message' => 'User not found'];
+                case 'get_user':
+                case 'get_users':
+                    // Protected actions: require JWT
+                    $jwt = $request['token'] ?? null;
+                    if (!$jwt) {
+                        return ['status' => 'error', 'message' => 'Unauthorized: missing token'];
                     }
-                    return ['status' => 'success', 'message' => 'User deleted successfully'];
+
+                    // Pass token to service; service will decode and authorize
+                    if ($action === 'update_user') {
+                        $user = $service->updateUser(
+                            $jwt,
+                            (int) ($request['id'] ?? 0),
+                            $request['data'] ?? []
+                        );
+                        if (!$user) {
+                            return ['status' => 'error', 'message' => 'User not found'];
+                        }
+                        return ['status' => 'success', 'data' => $user];
+                    }
+
+                    if ($action === 'delete_user') {
+                        $deleted = $service->deleteUser(
+                            $jwt,
+                            (int) ($request['id'])
+                        );
+                        if (!$deleted) {
+                            return ['status' => 'error', 'message' => 'User not found'];
+                        }
+                        return ['status' => 'success', 'message' => 'User deleted successfully'];
+                    }
+
+                    if ($action === 'get_user') {
+                        $user = $service->getUserById((int) ($request['id'] ?? 0));
+                        if (!$user) {
+                            return ['status' => 'error', 'message' => 'User not found'];
+                        }
+                        return ['status' => 'success', 'data' => $user];
+                    }
+
+                    if ($action === 'get_users') {
+                        $users = $service->getAllUsers();
+                        return ['status' => 'success', 'data' => $users];
+                    }
+
+                    break;
 
                 case 'ping':
                     return ['status' => 'ok', 'message' => 'pong'];
@@ -123,11 +169,19 @@ class UserRpcWorker extends Command
                 'status' => 'validation_error',
                 'errors' => $e->errors(),
             ];
+        } catch (AuthorizationException $e) {
+            return [
+                'status' => 'forbidden',
+                'message' => $e->getMessage(),
+            ];
         } catch (\Throwable $e) {
             return [
                 'status' => 'error',
                 'message' => $e->getMessage(),
             ];
         }
+
+        // Fallback return to satisfy static analyzers: ensure an array is always returned.
+        return ['status' => 'error', 'message' => 'Unknown action'];
     }
 }

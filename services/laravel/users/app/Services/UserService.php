@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Constants\Abilities;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -10,6 +11,16 @@ use Illuminate\Database\Eloquent\Collection;
 
 class UserService
 {
+
+    protected AuthorizationService $authorizationService;
+    protected AuthenticationService $authenticationService;
+
+
+    public function __construct(AuthorizationService $authorizationService, AuthenticationService $authenticationService)
+    {
+        $this->authorizationService = $authorizationService;
+        $this->authenticationService = $authenticationService;
+    }
 
     protected function validateData(array $data, bool $isCreate = true): array
     {
@@ -80,14 +91,17 @@ class UserService
      * @param  array  $data
      * @return User|null
      */
-    public function updateUser(int $id, array $data)
+    public function updateUser(string $jwt, int $id, array $data)
     {
-        $validated = $this->validateData($data, false);
+        $currentUser = $this->authenticationService->decodeToken($jwt);
         $user = User::find($id);
+        $validated = $this->validateData($data, false);
 
         if (!$user) {
             return null;
         }
+
+        $this->authorizationService->authorize($currentUser, Abilities::USER_UPDATE, $user);
 
         if (isset($validated['password'])) {
             $validated['password'] = Hash::make($validated['password']);
@@ -103,14 +117,28 @@ class UserService
      * @param  int  $id
      * @return bool
      */
-    public function deleteUser(int $id): bool
+    public function deleteUser(string $jwt, int $id): bool
     {
+        $currentUser = $this->authenticationService->decodeToken($jwt);
         $user = User::find($id);
-
         if (!$user) {
             return false;
         }
+        if (! $currentUser) {
+            return false;
+        }
+        $this->authorizationService->authorize($currentUser, Abilities::USER_DELETE, $user);
 
         return $user->delete();
+    }
+
+    public function login(string $email, string $password)
+    {
+        $user = $this->authenticationService->authenticate($email, $password);
+        if (!$user) {
+            return null;
+        }
+        $token = $this->authenticationService->createToken($user);
+        return ['user' => $user, 'token' => $token];
     }
 }
