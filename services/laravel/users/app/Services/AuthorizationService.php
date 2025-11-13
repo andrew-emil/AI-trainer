@@ -5,7 +5,6 @@ namespace App\Services;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Auth\Access\AuthorizationException;
 use App\Models\User;
-use App\Constants\Abilities;
 
 class AuthorizationService
 {
