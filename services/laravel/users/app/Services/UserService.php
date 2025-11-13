@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Constants\Abilities;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -52,8 +51,11 @@ class UserService
      *
      * @return Collection
      */
-    public function getAllUsers(): Collection
+    public function getAllUsers(string $jwt): Collection | array
     {
+        if (!$this->authenticationService->decodeToken($jwt)) {
+            return ['status' => 'error', 'message' => 'Unauthorized'];
+        }
         return User::all();
     }
 
@@ -63,8 +65,11 @@ class UserService
      * @param  int  $id
      * @return User|null
      */
-    public function getUserById(int $id): ?User
+    public function getUserById(int $id, string $jwt): User | array | null
     {
+        if (!$this->authenticationService->decodeToken($jwt)) {
+            return ['status' => 'error', 'message' => 'Unauthorized'];
+        }
         return User::find($id);
     }
 
@@ -138,6 +143,13 @@ class UserService
         if (!$user) {
             return null;
         }
+        $token = $this->authenticationService->createToken($user);
+        return ['user' => $user, 'token' => $token];
+    }
+
+    public function register(array $data)
+    {
+        $user = $this->createUser($data);
         $token = $this->authenticationService->createToken($user);
         return ['user' => $user, 'token' => $token];
     }

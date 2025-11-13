@@ -108,6 +108,10 @@ class UserRpcWorker extends Command
                         return ['status' => 'error', 'message' => 'Invalid credentials'];
                     }
                     return ['status' => 'success', 'data' => $result];
+                case 'register':
+                    // Public endpoint, no JWT required
+                    $user = $service->createUser($request['data'] ?? []);
+                    return ['status' => 'success', 'data' => $user];
 
                 case 'update_user':
                 case 'delete_user':
@@ -144,7 +148,7 @@ class UserRpcWorker extends Command
                     }
 
                     if ($action === 'get_user') {
-                        $user = $service->getUserById((int) ($request['id'] ?? 0));
+                        $user = $service->getUserById((int) ($request['id'] ?? 0), $jwt);
                         if (!$user) {
                             return ['status' => 'error', 'message' => 'User not found'];
                         }
@@ -152,7 +156,7 @@ class UserRpcWorker extends Command
                     }
 
                     if ($action === 'get_users') {
-                        $users = $service->getAllUsers();
+                        $users = $service->getAllUsers($jwt);
                         return ['status' => 'success', 'data' => $users];
                     }
 
