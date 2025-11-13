@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\UserRequest;
 use App\Infrastructure\RabbitMQRpcClient;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
@@ -20,10 +22,15 @@ class UserController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
+        $jwt = $request->bearerToken();
+        if (!$jwt) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 401);
+        }
         $response = $this->rpc->call('user_service_rpc_queue', [
             'action' => 'get_users',
+            'token' => $jwt,
         ]);
 
         return response()->json($response);
@@ -63,26 +70,89 @@ class UserController extends Controller
      */
     public function update(UserRequest $request, string $id)
     {
-        if (!$request->validated()) {
+        // Validate request
+        $validatedData = $request->validated();
+        if (!$validatedData) {
             return response()->json(['status' => 'error', 'message' => 'Invalid data'], 400);
         }
-        $response = $this->rpc->call('user_service_rpc_queue', [
+
+        // Extract JWT from request header
+        $jwt = $request->bearerToken();
+        if (!$jwt) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 401);
+        }
+
+        // Prepare RPC payload
+        $payload = [
             'action' => 'update_user',
+            'token' => $jwt,   // Pass JWT so microservice can authenticate & authorize
             'id' => $id,
-            'data' => $request->validated(),
-        ]);
+            'data' => $validatedData,
+        ];
+
+        // Call the microservice via RPC
+        $response = $this->rpc->call('user_service_rpc_queue', $payload);
+
+        return response()->json($response);
+    }
+
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(string $id, Request $request)
+    {
+        // Extract JWT from Authorization header
+        $jwt = $request->bearerToken();
+        if (!$jwt) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 401);
+        }
+
+        // Prepare RPC payload
+        $payload = [
+            'action' => 'delete_user',
+            'token' => $jwt,   // Pass JWT to microservice
+            'id' => $id,
+        ];
+
+        // Call RPC worker
+        $response = $this->rpc->call('user_service_rpc_queue', $payload);
 
         return response()->json($response);
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Handle user login.
      */
-    public function destroy(string $id)
+    public function login(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'password' => 'required|string|min:6',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+        $credentials = $request->only('email', 'password');
         $response = $this->rpc->call('user_service_rpc_queue', [
-            'action' => 'delete_user',
-            'id' => $id,
+            'action' => 'login',
+            'data' => $credentials,
+        ]);
+        return response()->json($response);
+    }
+
+    public function register(UserRequest $request)
+    {
+        if (!$request->validated()) {
+            return response()->json(['status' => 'error', 'message' => 'Invalid data'], 400);
+        }
+        $response = $this->rpc->call('user_service_rpc_queue', [
+            'action' => 'register',
+            'data' => $request->validated(),
         ]);
 
         return response()->json($response);
