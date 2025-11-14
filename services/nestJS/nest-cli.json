@@ -18,6 +18,15 @@
         "tsConfigPath": "apps/chatbot/tsconfig.app.json"
       }
     },
+    "chatbot-service": {
+      "type": "application",
+      "root": "apps/chatbot-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/chatbot-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/chatbot-service/tsconfig.app.json"
+      }
+    },
     "contracts": {
       "type": "library",
       "root": "libs/contracts",
@@ -25,6 +34,15 @@
       "sourceRoot": "libs/contracts/src",
       "compilerOptions": {
         "tsConfigPath": "libs/contracts/tsconfig.lib.json"
+      }
+    },
+    "notification-service": {
+      "type": "application",
+      "root": "apps/notification-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/notification-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/notification-service/tsconfig.app.json"
       }
     },
     "stream-service": {
