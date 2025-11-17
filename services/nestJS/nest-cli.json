@@ -9,15 +9,6 @@
     "tsConfigPath": "./tsconfig.json"
   },
   "projects": {
-    "chatbot": {
-      "type": "application",
-      "root": "apps/chatbot",
-      "entryFile": "main",
-      "sourceRoot": "apps/chatbot/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/chatbot/tsconfig.app.json"
-      }
-    },
     "chatbot-service": {
       "type": "application",
       "root": "apps/chatbot-service",
@@ -54,13 +45,13 @@
         "tsConfigPath": "apps/stream-service/tsconfig.app.json"
       }
     },
-    "workout": {
+    "test-gateway": {
       "type": "application",
-      "root": "apps/workout",
+      "root": "apps/test-gateway",
       "entryFile": "main",
-      "sourceRoot": "apps/workout/src",
+      "sourceRoot": "apps/test-gateway/src",
       "compilerOptions": {
-        "tsConfigPath": "apps/workout/tsconfig.app.json"
+        "tsConfigPath": "apps/test-gateway/tsconfig.app.json"
       }
     }
   }

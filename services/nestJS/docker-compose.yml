@@ -1,0 +1,179 @@
+services:
+  # ----------------- Databases -----------------
+  # postgres:
+  #   image: postgres:15
+  #   container_name: postgres_db
+  #   environment:
+  #     POSTGRES_USER: admin
+  #     POSTGRES_PASSWORD: admin123
+  #     POSTGRES_DB: laravel_db
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data
+
+  mongo:
+    image: mongo:latest
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodata:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh mongo:27017 --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# ----------------- Redis -----------------
+  redis:
+    image: redis:7
+    ports:
+    - "6379:6379"
+
+  # ----------------- RabbitMQ -----------------
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672" # RabbitMQ broker
+      - "15672:15672" # Management dashboard
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin123
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "status"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  # ----------------- NestJS Gateway -----------------
+  test-gateway:
+    container_name: test-gateway
+    build:
+      context: .
+      args:
+        APP_NAME: test-gateway
+    depends_on:
+      # postgres:
+      #   condition: service_started
+      mongo:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      RABBITMQ_URL: amqp://admin:admin123@rabbitmq:5672
+    command: ["sh", "-c", "npm run start:dev -- test-gateway"]
+    restart: unless-stopped
+
+  # ----------------- NestJS Chatbot Service -----------------
+  chatbot:
+    container_name: chatbot-service
+    build:
+      context: .
+      args:
+        APP_NAME: chatbot-service
+    environment:
+      RABBITMQ_URL: amqp://admin:admin123@rabbitmq:5672
+      RABBITMQ_PREFETCH: 10
+      DBNAME: chat-bot"
+      DBHOST: "mongodb://mongo:27017"
+      API_KEY: "AIzaSyDmXvoByU3RIS0YKCX5SKaceir8PerhmOM"
+      REDIS_URL: "redis://redis:6379"
+
+    depends_on:
+      mongo:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    ports:
+      - "3001:3000"
+    command: ["sh", "-c", "npm run start:dev -- chatbot-service"]
+    restart: unless-stopped
+
+  # ----------------- NestJS stream Service -----------------
+  # stream-service:
+  #   container_name: stream-service
+  #   build:
+  #     context: .
+  #     args:
+  #       APP_NAME: stream-service
+  #   environment:
+  #     - APP_NAME=stream-service
+  #     - MONGO_URI=mongodb://mongo:27017/stream_db
+  #     - NODE_ENV=development
+  #   volumes:
+  #     - /usr/src/app/node_modules
+  #   depends_on:
+  #     mongo:
+  #       condition: service_started
+  #     rabbitmq:
+  #       condition: service_healthy
+  #   ports:
+  #     - "3002:3000"
+  #   command: ["sh", "-c", "npm run start:dev stream-service --watch"]
+    # restart: unless-stopped
+
+    # ----------------- NestJS notification Service -----------------
+  # notification-service:
+  #   container_name: notification-service
+  #   build:
+  #     context: .
+  #     args:
+  #       APP_NAME: notification-service
+  #   environment:
+  #     APP_NAME: notification-service
+  #     DB_CONNECTION: pgsql
+  #     DB_HOST: postgres_db
+  #     DB_PORT: 5432
+  #     DB_DATABASE: notification_db
+  #     DB_USERNAME: admin
+  #     DB_PASSWORD: admin123
+  #     NODE_ENV: development
+  #   volumes:
+  #     - /usr/src/app/node_modules
+  #   depends_on:
+  #     postgres:
+  #       condition: service_started
+  #     rabbitmq:
+  #       condition: service_healthy
+  #   ports:
+  #     - "3003:3000"
+  #   command: ["sh", "-c", "npm run start:dev stream-service --watch"]
+  #   restart: unless-stopped
+
+  mongo-express:
+    image: mongo-express:latest
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_SERVER: "mongo"
+      ME_CONFIG_MONGODB_PORT: "27017"
+      ME_CONFIG_BASICAUTH_USERNAME: "admin"
+      ME_CONFIG_BASICAUTH_PASSWORD: "admin123"
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  # pgadmin:
+  #   image: elestio/pgadmin:latest
+  #   container_name: pgadmin
+  #   restart: unless-stopped
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: admin@example.com
+  #     PGADMIN_DEFAULT_PASSWORD: admin123
+  #   ports:
+  #     - "5050:80"  # Access at: http://localhost:5050
+  #   depends_on:
+  #     postgres:
+  #       condition: service_started
+
+
+volumes:
+  # pgdata:
+  mongodata:
+  rabbitmq_data:
