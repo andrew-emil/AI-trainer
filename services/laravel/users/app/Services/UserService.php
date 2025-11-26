@@ -153,4 +153,9 @@ class UserService
         $token = $this->authenticationService->createToken($user);
         return ['user' => $user, 'token' => $token];
     }
+
+    public function logout(string $jwt): bool
+    {
+        return "true";
+    }
 }
