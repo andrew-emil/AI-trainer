@@ -9,16 +9,17 @@ async function bootstrap() {
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(ChatbotServiceModule, {
     transport: Transport.RMQ,
     options: {
-      urls: [process.env.RABBITMQ_URL as string || "amqp://localhost:5672"],
-      queue: Queues.CHATBOT_SERVICE_QUEUE,
+      urls: [process.env.RABBITMQ_URL ?? 'amqp://admin:admin123@rabbitmq:5672'],
+      queue: Queues.CHATBOT_SERVICE_QUEUE,   // <- SAME STRING as gateway
       queueOptions: {
         durable: true,
       },
-      noAck: false,
-      prefetchCount: parseInt(process.env.RABBITMQ_PREFETCH || '10', 10),
     },
-  })
-  console.log(process.env.RABBITMQ_URL)
+  });
+
+  console.log('MS RABBITMQ_URL:', process.env.RABBITMQ_URL);
+  console.log('MS queue:', Queues.CHATBOT_SERVICE_QUEUE);
+
 
   app.useGlobalPipes(
     new ValidationPipe({

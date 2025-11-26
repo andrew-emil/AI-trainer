@@ -13,6 +13,7 @@ import { Conversation, ConversationSchema } from './entity/conversation.entity';
 import { HistoryModule } from './history/history.module';
 import { RedisProvider } from './providers/redis.provider';
 import { join } from 'path';
+import { Queues } from '@app/contracts/queue';
 
 @Module({
   imports: [
@@ -54,7 +55,7 @@ import { join } from 'path';
           transport: Transport.RMQ,
           options: {
             urls: [config.get<string>('rabbitmq.uri')!],
-            queue: 'chatbot.outgoing.reply.queue',
+            queue: Queues.CHATBOT_SERVICE_QUEUE_OUTGOING,
             queueOptions: { durable: true },
           },
         }),
