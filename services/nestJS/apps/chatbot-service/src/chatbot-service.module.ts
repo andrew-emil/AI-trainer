@@ -27,11 +27,8 @@ import { Queues } from '@app/contracts/queue';
         ,
       load: [databaseConfig, chatbotConfig, rabbitmqConfig],
       envFilePath: [
-        // 1) service-specific .env (when running from compiled dist/)
         join(__dirname, '..', '.env'),
-        // 2) service-specific .env relative to project root (when running via ts-node/nest-cli from root)
         'apps/chatbot-service/.env',
-        // 3) root .env as global fallback
         '.env',
       ],
     }),

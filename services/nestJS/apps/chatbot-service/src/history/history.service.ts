@@ -29,7 +29,7 @@ export class HistoryService {
 
     async getConversationById(payload: GetAndDeletePayloadDto) {
         const conversation = await this.conversationModel
-            .find({
+            .findOne({
                 _id: payload._id,
                 user_id: payload.userId
             })
@@ -38,7 +38,7 @@ export class HistoryService {
         if (!conversation)
             throw new BadRequestException("Conversation not found")
 
-        return conversation
+        return conversation.toObject()
     }
 
     async updateConversationTitle(payload: UpdatePayloadDto) {
@@ -54,7 +54,7 @@ export class HistoryService {
         if (!updatedConversation)
             throw new BadRequestException("Conversation not found")
 
-        return updatedConversation
+        return updatedConversation.toObject()
     }
 
     async deleteConversation(payload: GetAndDeletePayloadDto) {
@@ -66,6 +66,6 @@ export class HistoryService {
         if (!deletedConversation)
             throw new BadRequestException("Conversation not found")
 
-        return deletedConversation
+        return deletedConversation.toObject()
     }
 }

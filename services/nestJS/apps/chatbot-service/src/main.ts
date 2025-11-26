@@ -10,15 +10,12 @@ async function bootstrap() {
     transport: Transport.RMQ,
     options: {
       urls: [process.env.RABBITMQ_URL ?? 'amqp://admin:admin123@rabbitmq:5672'],
-      queue: Queues.CHATBOT_SERVICE_QUEUE,   // <- SAME STRING as gateway
+      queue: Queues.CHATBOT_SERVICE_QUEUE,
       queueOptions: {
         durable: true,
       },
     },
   });
-
-  console.log('MS RABBITMQ_URL:', process.env.RABBITMQ_URL);
-  console.log('MS queue:', Queues.CHATBOT_SERVICE_QUEUE);
 
 
   app.useGlobalPipes(
