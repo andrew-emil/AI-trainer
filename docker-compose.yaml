@@ -26,6 +26,12 @@ services:
     networks:
       - trainer_net
 
+  redis:
+    image: redis:7
+    container_name: user_service_redis
+    ports:
+      - "6379:6379"
+
   # ----------------- RabbitMQ -----------------
   rabbitmq:
     image: rabbitmq:3-management
@@ -90,82 +96,82 @@ services:
       - trainer_net
 
   # ----------------- NestJS Chatbot Service -----------------
-  chatbot:
-    container_name: chatbot
-    build:
-      context: ./service/nestJS
-      args:
-        APP_NAME: chatbot
-    environment:
-      - APP_NAME=chatbot
-      - MONGO_URI=mongodb://mongo:27017/chatbot_db
-      - NODE_ENV=development
-    depends_on:
-      mongo:
-        condition: service_started
-      rabbitmq:
-        condition: service_healthy
-    ports:
-      - "3001:3000"
-    command: ["sh", "-c", "npm run start:dev chatbot-service"]
-    restart: unless-stopped
-    networks:
-      - trainer_net
+  # chatbot:
+  #   container_name: chatbot
+  #   build:
+  #     context: ./service/nestJS
+  #     args:
+  #       APP_NAME: chatbot
+  #   environment:
+  #     - APP_NAME=chatbot
+  #     - MONGO_URI=mongodb://mongo:27017/chatbot_db
+  #     - NODE_ENV=development
+  #   depends_on:
+  #     mongo:
+  #       condition: service_started
+  #     rabbitmq:
+  #       condition: service_healthy
+  #   ports:
+  #     - "3001:3000"
+  #   command: ["sh", "-c", "npm run start:dev chatbot-service"]
+  #   restart: unless-stopped
+  #   networks:
+  #     - trainer_net
 
-  # ----------------- NestJS stream Service -----------------
-  stream-service:
-    container_name: stream-service
-    build:
-      context: ./service/nestJS
-      args:
-        APP_NAME: stream-service
-    environment:
-      - APP_NAME=stream-service
-      - MONGO_URI=mongodb://mongo:27017/stream_db
-      - NODE_ENV=development
-    volumes:
-      - /usr/src/app/node_modules
-    depends_on:
-      mongo:
-        condition: service_started
-      rabbitmq:
-        condition: service_healthy
-    ports:
-      - "3001:3000"
-    command: ["sh", "-c", "npm run start:dev stream-service"]
-    restart: unless-stopped
-    networks:
-      - trainer_net
+  # # ----------------- NestJS stream Service -----------------
+  # stream-service:
+  #   container_name: stream-service
+  #   build:
+  #     context: ./service/nestJS
+  #     args:
+  #       APP_NAME: stream-service
+  #   environment:
+  #     - APP_NAME=stream-service
+  #     - MONGO_URI=mongodb://mongo:27017/stream_db
+  #     - NODE_ENV=development
+  #   volumes:
+  #     - /usr/src/app/node_modules
+  #   depends_on:
+  #     mongo:
+  #       condition: service_started
+  #     rabbitmq:
+  #       condition: service_healthy
+  #   ports:
+  #     - "3001:3000"
+  #   command: ["sh", "-c", "npm run start:dev stream-service"]
+  #   restart: unless-stopped
+  #   networks:
+  #     - trainer_net
 
-    # ----------------- NestJS notification Service -----------------
-  notification-service:
-    container_name: notification-service
-    build:
-      context: ./service/nestJS
-      args:
-        APP_NAME: notification-service
-    environment:
-      APP_NAME: notification-service
-      DB_CONNECTION: pgsql
-      DB_HOST: postgres_db
-      DB_PORT: 5432
-      DB_DATABASE: notification_db
-      DB_USERNAME: admin
-      DB_PASSWORD: admin123
-      NODE_ENV: development
-    volumes:
-      - /usr/src/app/node_modules
-    depends_on:
-      postgres:
-        condition: service_started
-      rabbitmq:
-        condition: service_healthy
-    ports:
-      - "3002:3000"
-    command: ["sh", "-c", "npm run start:dev stream-service"]
-    restart: unless-stopped
-    networks:
-      - trainer_net
+  #   # ----------------- NestJS notification Service -----------------
+  # notification-service:
+  #   container_name: notification-service
+  #   build:
+  #     context: ./service/nestJS
+  #     args:
+  #       APP_NAME: notification-service
+  #   environment:
+  #     APP_NAME: notification-service
+  #     DB_CONNECTION: pgsql
+  #     DB_HOST: postgres_db
+  #     DB_PORT: 5432
+  #     DB_DATABASE: notification_db
+  #     DB_USERNAME: admin
+  #     DB_PASSWORD: admin123
+  #     NODE_ENV: development
+  #   volumes:
+  #     - /usr/src/app/node_modules
+  #   depends_on:
+  #     postgres:
+  #       condition: service_started
+  #     rabbitmq:
+  #       condition: service_healthy
+  #   ports:
+  #     - "3002:3000"
+  #   command: ["sh", "-c", "npm run start:dev stream-service"]
+  #   restart: unless-stopped
+  #   networks:
+  #     - trainer_net
 
 networks:
   trainer_net:

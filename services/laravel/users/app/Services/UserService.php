@@ -65,7 +65,7 @@ class UserService
      * @param  int  $id
      * @return User|null
      */
-    public function getUserById(int $id, string $jwt): User | array | null
+    public function getUserById(string $id, string $jwt): User | array | null
     {
         if (!$this->authenticationService->decodeToken($jwt)) {
             return ['status' => 'error', 'message' => 'Unauthorized'];
@@ -96,7 +96,7 @@ class UserService
      * @param  array  $data
      * @return User|null
      */
-    public function updateUser(string $jwt, int $id, array $data)
+    public function updateUser(string $jwt, string $id, array $data)
     {
         $currentUser = $this->authenticationService->decodeToken($jwt);
         $user = User::find($id);
@@ -122,7 +122,7 @@ class UserService
      * @param  int  $id
      * @return bool
      */
-    public function deleteUser(string $jwt, int $id): bool
+    public function deleteUser(string $jwt, string $id): bool
     {
         $currentUser = $this->authenticationService->decodeToken($jwt);
         $user = User::find($id);
@@ -156,6 +156,19 @@ class UserService
 
     public function logout(string $jwt): bool
     {
-        return "true";
+        try {
+            // Validate token and get user (no need for payload here)
+            $this->authenticationService->decodeToken($jwt);
+
+            // Get expiry separately
+            $exp = $this->authenticationService->getExpirationFromToken($jwt);
+
+            // Add token to blacklist
+            $this->authenticationService->blacklistService->blacklist($jwt, $exp);
+
+            return true;
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 }

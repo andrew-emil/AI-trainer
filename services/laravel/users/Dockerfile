@@ -19,6 +19,10 @@ COPY . .
 # ---- Install Dependencies ----
 RUN composer install --no-dev --optimize-autoloader
 
+# Install Redis extension
+RUN pecl install redis \
+    && docker-php-ext-enable redis
+
 # ---- Copy and Set Entrypoint ----
 COPY ./scripts/php-fpm-entrypoint /usr/local/bin/php-entrypoint
 RUN chmod +x /usr/local/bin/php-entrypoint
