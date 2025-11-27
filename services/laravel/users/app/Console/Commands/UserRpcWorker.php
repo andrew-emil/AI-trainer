@@ -24,7 +24,7 @@ class UserRpcWorker extends Command
     public function __construct()
     {
         parent::__construct();
-        $this->authenticationService = new AuthenticationService();
+        $this->authenticationService = new AuthenticationService(new TokenBlacklistService());
         $this->authorizationService = new AuthorizationService();
     }
 
@@ -119,6 +119,7 @@ class UserRpcWorker extends Command
                 case 'get_user':
                 case 'get_users':
                 case 'logout':
+                case 'refresh_token':
                     // Protected actions: require JWT
                     $jwt = $request['token'] ?? null;
                     if (!$jwt) {
@@ -168,6 +169,14 @@ class UserRpcWorker extends Command
                             return ['status' => 'error', 'message' => 'Logout failed'];
                         }
                         return ['status' => 'success', 'message' => 'Logged out successfully'];
+                    }
+
+                    if ($action === 'refresh_token') {
+                        $newToken = $this->authenticationService->refreshToken($jwt);
+                        if (!$newToken) {
+                            return ['status' => 'error', 'message' => 'Token refresh failed'];
+                        }
+                        return ['status' => 'success', 'data' => ['token' => $newToken]];
                     }
 
                     break;
