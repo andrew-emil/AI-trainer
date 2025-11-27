@@ -7,14 +7,15 @@ use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Auth\AuthenticationException;
+use PhpParser\Token;
 
 class AuthenticationService
 {
     public $blacklistService;
 
-    public function __construct()
+    public function __construct(TokenBlacklistService $blacklistService)
     {
-        $this->blacklistService = new TokenBlacklistService();
+        $this->blacklistService = $blacklistService;
     }
 
     public function authenticate(string $email, string $password): ?User
@@ -60,6 +61,25 @@ class AuthenticationService
 
         return $user;
     }
+
+    public function refreshToken(string $oldToken, int $expiryHours = 2): ?string
+    {
+        try {
+            if ($this->blacklistService->isBlacklisted($oldToken)) {
+                return null;
+            }
+            $user = $this->decodeToken($oldToken);
+
+            $exp = $this->getExpirationFromToken($oldToken);
+            $this->blacklistService->blacklist($oldToken, $exp);
+
+            return $this->createToken($user, $expiryHours);
+        } catch (\Throwable $e) {
+            // Safe: log error but do not crash consumer
+            throw new AuthenticationException('Failed to refresh token: ' . $e->getMessage());
+        }
+    }
+
 
     public function getExpirationFromToken(string $token): int
     {
