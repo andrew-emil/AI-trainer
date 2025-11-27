@@ -1,9 +1,8 @@
-import { RMQ_TOKENS } from '@app/contracts/tokens';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { ClientsModule, Transport } from '@nestjs/microservices';
 import { MongooseModule } from "@nestjs/mongoose";
 import Joi from 'joi';
+import { join } from 'path';
 import { ChatbotServiceController } from './chatbot-service.controller';
 import { ChatbotServiceService } from './chatbot-service.service';
 import chatbotConfig, { chatbotConfigSchema } from './config/chatbot.config';
@@ -12,8 +11,6 @@ import rabbitmqConfig, { rabbitmqSchema } from './config/rabbitmq.config';
 import { Conversation, ConversationSchema } from './entity/conversation.entity';
 import { HistoryModule } from './history/history.module';
 import { RedisProvider } from './providers/redis.provider';
-import { join } from 'path';
-import { Queues } from '@app/contracts/queue';
 
 @Module({
   imports: [
@@ -24,7 +21,7 @@ import { Queues } from '@app/contracts/queue';
         .concat(databaseConfigSchema)
         .concat(chatbotConfigSchema)
         .concat(rabbitmqSchema)
-        ,
+      ,
       load: [databaseConfig, chatbotConfig, rabbitmqConfig],
       envFilePath: [
         join(__dirname, '..', '.env'),
@@ -34,33 +31,23 @@ import { Queues } from '@app/contracts/queue';
     }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        uri: configService.get<string>("database.host"),
-        dbName: configService.get<string>("database.name")
-      }),
+      useFactory: (configService: ConfigService) => {
+        console.log(configService.get<string>("database.host"));
+        return {
+          uri: configService.get<string>("database.host"),
+          dbName: configService.get<string>("database.name")
+        }
+      },
       inject: [ConfigService]
-    }),
+    }
+    ),
     MongooseModule.forFeature([
       { name: Conversation.name, schema: ConversationSchema },
-    ]),
-    ClientsModule.registerAsync([
-      {
-        name: RMQ_TOKENS.CHAT_OUTGOING_CLIENT,
-        imports: [ConfigModule],
-        inject: [ConfigService],
-        useFactory: (config: ConfigService) => ({
-          transport: Transport.RMQ,
-          options: {
-            urls: [config.get<string>('rabbitmq.uri')!],
-            queue: Queues.CHATBOT_SERVICE_QUEUE_OUTGOING,
-            queueOptions: { durable: true },
-          },
-        }),
-      },
     ]),
     HistoryModule
   ],
   controllers: [ChatbotServiceController],
   providers: [ChatbotServiceService, RedisProvider],
+  exports: [ChatbotServiceService]
 })
 export class ChatbotServiceModule { }
