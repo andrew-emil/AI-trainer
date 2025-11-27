@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Services\AuthenticationService;
 use App\Services\UserService;
 use App\Services\AuthorizationService;
+use App\Services\TokenBlacklistService;
 use Illuminate\Console\Command;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -23,7 +24,7 @@ class UserRpcWorker extends Command
     public function __construct()
     {
         parent::__construct();
-        $this->authenticationService = new AuthenticationService();
+        $this->authenticationService = new AuthenticationService(new TokenBlacklistService());
         $this->authorizationService = new AuthorizationService();
     }
 
@@ -110,13 +111,15 @@ class UserRpcWorker extends Command
                     return ['status' => 'success', 'data' => $result];
                 case 'register':
                     // Public endpoint, no JWT required
-                    $user = $service->createUser($request['data'] ?? []);
+                    $user = $service->register($request['data'] ?? []);
                     return ['status' => 'success', 'data' => $user];
 
                 case 'update_user':
                 case 'delete_user':
                 case 'get_user':
                 case 'get_users':
+                case 'logout':
+                case 'refresh_token':
                     // Protected actions: require JWT
                     $jwt = $request['token'] ?? null;
                     if (!$jwt) {
@@ -127,7 +130,7 @@ class UserRpcWorker extends Command
                     if ($action === 'update_user') {
                         $user = $service->updateUser(
                             $jwt,
-                            (int) ($request['id'] ?? 0),
+                            (string) ($request['id'] ?? 0),
                             $request['data'] ?? []
                         );
                         if (!$user) {
@@ -139,7 +142,7 @@ class UserRpcWorker extends Command
                     if ($action === 'delete_user') {
                         $deleted = $service->deleteUser(
                             $jwt,
-                            (int) ($request['id'])
+                            (string) ($request['id'])
                         );
                         if (!$deleted) {
                             return ['status' => 'error', 'message' => 'User not found'];
@@ -148,7 +151,7 @@ class UserRpcWorker extends Command
                     }
 
                     if ($action === 'get_user') {
-                        $user = $service->getUserById((int) ($request['id'] ?? 0), $jwt);
+                        $user = $service->getUserById((string) ($request['id'] ?? 0), $jwt);
                         if (!$user) {
                             return ['status' => 'error', 'message' => 'User not found'];
                         }
@@ -158,6 +161,22 @@ class UserRpcWorker extends Command
                     if ($action === 'get_users') {
                         $users = $service->getAllUsers($jwt);
                         return ['status' => 'success', 'data' => $users];
+                    }
+
+                    if ($action === 'logout') {
+                        $loggedOut = $service->logout($jwt);
+                        if (!$loggedOut) {
+                            return ['status' => 'error', 'message' => 'Logout failed'];
+                        }
+                        return ['status' => 'success', 'message' => 'Logged out successfully'];
+                    }
+
+                    if ($action === 'refresh_token') {
+                        $newToken = $this->authenticationService->refreshToken($jwt);
+                        if (!$newToken) {
+                            return ['status' => 'error', 'message' => 'Token refresh failed'];
+                        }
+                        return ['status' => 'success', 'data' => ['token' => $newToken]];
                     }
 
                     break;

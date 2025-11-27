@@ -157,4 +157,38 @@ class UserController extends Controller
 
         return response()->json($response);
     }
+
+    public function logout(Request $request)
+    {
+        // Extract JWT from Authorization header
+        $jwt = $request->bearerToken();
+        if (!$jwt) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 401);
+        }
+
+        // Prepare RPC payload
+        $payload = [
+            'action' => 'logout',
+            'token' => $jwt,   // Pass JWT to microservice
+        ];
+
+        // Call RPC worker
+        $response = $this->rpc->call('user_service_rpc_queue', $payload);
+
+        return response()->json($response);
+    }
+
+    public function refreshToken(Request $request)
+    {
+        $jwt = $request->bearerToken();
+        if (!$jwt) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 401);
+        }
+        $payload = [
+            'action' => 'refresh_token',
+            'token' => $jwt,   // Pass JWT to microservice
+        ];
+        $response = $this->rpc->call('user_service_rpc_queue', $payload);
+        return response()->json($response);
+    }
 }
