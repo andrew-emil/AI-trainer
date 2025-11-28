@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fr3on_fit_app/core/constants/constants.dart';
+import 'package:fr3on_fit_app/widgets/custom_app_bar.dart';
 import 'package:fr3on_fit_app/widgets/custom_text_field.dart';
 import 'package:fr3on_fit_app/widgets/primary_button.dart';
 import 'package:fr3on_fit_app/widgets/social_button.dart';
@@ -12,18 +13,7 @@ class LoginPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
-        elevation: 0,
-        leading: BackButton(color: Theme.of(context).iconTheme.color),
-        title: Text(
-          "Login",
-          style: TextStyle(
-            color: Theme.of(context).textTheme.titleLarge?.color,
-          ),
-        ),
-        centerTitle: true,
-      ),
+      appBar: CustomAppBar(title: 'Login'),
 
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
