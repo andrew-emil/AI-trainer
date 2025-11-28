@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:fr3on_fit_app/core/constants/constants.dart';
+import 'package:fr3on_fit_app/features/auth/register_page.dart';
 import 'package:fr3on_fit_app/widgets/custom_text_field.dart';
 import 'package:fr3on_fit_app/widgets/primary_button.dart';
 import 'package:fr3on_fit_app/widgets/social_button.dart';
@@ -33,12 +35,12 @@ class LoginPage extends StatelessWidget {
             children: [
               const CustomTextField(
                 label: "Email or username",
-                hint: "example@gmail.com",
+                hint: "Enter your email or username",
               ),
 
               const CustomTextField(
                 label: "Password",
-                hint: "minimum 6 characters",
+                hint: "Enter your password",
                 obscure: true,
               ),
 
@@ -55,6 +57,22 @@ class LoginPage extends StatelessWidget {
               const SizedBox(height: 5),
 
               PrimaryButton(text: "Login", onPressed: () {}),
+              const SizedBox(height: 5),
+
+              Center(
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => RegisterPage()),
+                    );
+                  },
+                  child: const Text(
+                    "don't have an account? sign up",
+                    style: TextStyle(color: Color(0xFF3A82F7), fontSize: 15),
+                  ),
+                ),
+              ),
 
               const SizedBox(height: 20),
 
@@ -73,8 +91,10 @@ class LoginPage extends StatelessWidget {
 
               SocialButton(
                 text: "Sign in with Google",
-                icon: FontAwesomeIcons.google,
-                iconColor: kPrimaryColor,
+                iconWidget: Image.asset(
+                  "assets/images/icons/google.png",
+                  width: 24,
+                ),
                 onPressed: () {},
               ),
 
