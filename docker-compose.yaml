@@ -26,11 +26,23 @@ services:
     networks:
       - trainer_net
 
+  # redis:
+  #   image: redis:7
+  #   container_name: user_service_redis
+  #   ports:
+  #     - "6379:6379"
+  #   networks:
+  #     - trainer_net
+
+  # ----------------- Redis ---------------------------
   redis:
     image: redis:7
-    container_name: user_service_redis
+    container_name: redis
     ports:
       - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
     networks:
       - trainer_net
 
@@ -53,6 +65,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
   # ----------------- Laravel Gateway -----------------
   gateway-service:
     build: ./services/gateway
@@ -98,27 +111,33 @@ services:
       - trainer_net
 
   # ----------------- NestJS Chatbot Service -----------------
-  # chatbot:
-  #   container_name: chatbot
-  #   build:
-  #     context: ./service/nestJS
-  #     args:
-  #       APP_NAME: chatbot
-  #   environment:
-  #     - APP_NAME=chatbot
-  #     - MONGO_URI=mongodb://mongo:27017/chatbot_db
-  #     - NODE_ENV=development
-  #   depends_on:
-  #     mongo:
-  #       condition: service_started
-  #     rabbitmq:
-  #       condition: service_healthy
-  #   ports:
-  #     - "3001:3000"
-  #   command: ["sh", "-c", "npm run start:dev chatbot-service"]
-  #   restart: unless-stopped
-  #   networks:
-  #     - trainer_net
+  chatbot:
+    container_name: chatbot
+    build:
+      context: ./service/nestJS
+      args:
+        APP_NAME: chatbot
+    environment:
+      - APP_NAME=chatbot
+      - DBHOST=mongodb://mongo:27017/
+      - NODE_ENV=development
+      - RABBITMQ_URL=amqp://admin:admin123@rabbitmq:5672
+      - DBNAME=chat-bot
+      - API_KEY=AIzaSyDmXvoByU3RIS0YKCX5SKaceir8PerhmOM
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      mongo:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    ports:
+      - "3001:3000"
+    command: ["sh", "-c", "npm run start:dev chatbot-service"]
+    restart: unless-stopped
+    networks:
+      - trainer_net
 
   # # ----------------- NestJS stream Service -----------------
   # stream-service:
@@ -183,3 +202,4 @@ volumes:
   pgdata:
   mongodata:
   rabbitmq_data:
+  redis_data:

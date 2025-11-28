@@ -5,12 +5,14 @@ import { UpdatePayloadDto } from './dtos/updatePayload.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { GetAllPayloadDto } from './dtos/getAllPayload.dto';
 import { GetAndDeletePayloadDto } from './dtos/getAndDeletePayload.dto';
+import { RedisProvider } from '../providers/redis.provider';
 
 @Injectable()
 export class HistoryService {
     constructor(
         @InjectModel(Conversation.name)
-        private readonly conversationModel: Model<Conversation>
+        private readonly conversationModel: Model<Conversation>,
+        private readonly redisProvider: RedisProvider
     ) { }
 
     async getAllConversation(payload: GetAllPayloadDto) {
@@ -28,6 +30,15 @@ export class HistoryService {
     }
 
     async getConversationById(payload: GetAndDeletePayloadDto) {
+        // Check cache first using the conversation ID
+        const convKey = `conversation:${payload._id}`;
+        const cached = await this.redisProvider.get<Conversation & { _id: string }>(convKey);
+
+        if (cached) {
+            return cached;
+        }
+
+        // If not in cache, fetch from database
         const conversation = await this.conversationModel
             .findOne({
                 _id: payload._id,

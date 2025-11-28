@@ -1,6 +1,5 @@
 export enum Patterns {
     CHAT_INCOMING = 'chat.incoming',
-    CHAT_OUTGOING = 'chat.outgoing',
 
     // History
     HISTORY_GET_ALL = 'history.getAll',
