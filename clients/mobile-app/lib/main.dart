@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fr3on_fit_app/features/auth/login_page.dart';
+import 'package:fr3on_fit_app/features/auth/on_boarding_screen.dart';
 import 'package:fr3on_fit_app/features/auth/register_page.dart';
 
 void main() {
@@ -14,7 +15,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: RegisterPage(),
+      home: OnBoardingScreen(),
     );
   }
 }
