@@ -45,10 +45,7 @@ class RegisterPage extends StatelessWidget {
               Center(
                 child: TextButton(
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => LoginPage()),
-                    );
+                    Navigator.pop(context);
                   },
                   child: const Text(
                     "Have an account? Log in",
@@ -75,7 +72,7 @@ class RegisterPage extends StatelessWidget {
               SocialButton(
                 text: "Sign in with Google",
                 iconWidget: Image.asset(
-                  "assets/images/icons/google.png",
+                  "assets/icon/google.png",
                   width: 24,
                 ),
                 onPressed: () {},
