@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Password;
 
 class UserService
 {
@@ -170,5 +171,44 @@ class UserService
         } catch (\Throwable $e) {
             return false;
         }
+    }
+
+    public function forgetPassword(string $email)
+    {
+        $user = User::where('email', $email)->first();
+        if (!$user) {
+            throw new \Exception('User not found');
+        }
+
+        $status = Password::sendResetLink(
+            ['email' => $email]
+        );
+
+
+        return $status === Password::RESET_LINK_SENT
+            ? ['message' => __($status), 'status' => 'success']
+            : ['message' => __($status), 'status' => 'error'];
+    }
+
+    public function resetPassword(string $email, string $token, string $newPassword)
+    {
+        $user = User::where('email', $email)->first();
+        if (!$user) {
+            throw new \Exception('User not found');
+        }
+
+        $status = Password::reset(
+            ['email' => $email, 'password' => $newPassword, 'password_confirmation' => $newPassword, 'token' => $token],
+            function ($user, $password) {
+                $validated = $this->validateData(['password' => $password], false);
+                $user->password = Hash::make($validated['password']);
+                $user->save();
+            }
+        );
+
+
+        return $status === Password::PASSWORD_RESET
+            ? ['message' => __($status), 'status' => 'success']
+            : ['message' => __($status), 'status' => 'error'];
     }
 }

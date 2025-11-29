@@ -12,3 +12,5 @@ Route::post('/users/login', [UserController::class, 'login']);
 Route::post('/users/register', [UserController::class, 'register']);
 Route::post('/users/logout', [UserController::class, 'logout']);
 Route::post('/users/refresh', [UserController::class, 'refreshToken']);
+Route::post('/users/forgetPassword', [UserController::class, 'forgetPassword']);
+Route::post('/users/resetPassword', [UserController::class, 'resetPassword']);

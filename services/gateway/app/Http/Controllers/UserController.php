@@ -191,4 +191,51 @@ class UserController extends Controller
         $response = $this->rpc->call('user_service_rpc_queue', $payload);
         return response()->json($response);
     }
+
+    public function forgetPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+        $email = $request->input('email');
+        $response = $this->rpc->call('user_service_rpc_queue', [
+            'action' => 'forget_password',
+            'data' => ['email' => $email],
+        ]);
+        return response()->json($response);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'token' => 'required|string',
+            'new_password' => 'required|string|min:8',
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+        $email = $request->input('email');
+        $token = $request->input('token');
+        $newPassword = $request->input('new_password');
+        $response = $this->rpc->call('user_service_rpc_queue', [
+            'action' => 'reset_password',
+            'data' => [
+                'email' => $email,
+                'token' => $token,
+                'new_password' => $newPassword,
+            ],
+        ]);
+        return response()->json($response);
+    }
 }
