@@ -113,6 +113,21 @@ class UserRpcWorker extends Command
                     // Public endpoint, no JWT required
                     $user = $service->register($request['data'] ?? []);
                     return ['status' => 'success', 'data' => $user];
+                case 'forget_password':
+                    // Public endpoint, no JWT required
+                    $email = $request['data']['email'] ?? '';
+                    $result = $service->forgetPassword($email);
+                    return ['status' => 'success', 'data' => $result];
+                case 'reset_password':
+                    // Public endpoint, no JWT required
+                    $email = $request['data']['email'] ?? '';
+                    $token = $request['data']['token'] ?? '';
+                    $newPassword = $request['data']['new_password'] ?? '';
+                    $result = $service->resetPassword($email, $token, $newPassword);
+                    if (!$result) {
+                        return ['status' => 'error', 'message' => 'Password reset failed'];
+                    }
+                    return ['status' => 'success', 'message' => 'Password reset successfully'];
 
                 case 'update_user':
                 case 'delete_user':
