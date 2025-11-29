@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:fr3on_fit_app/core/constants/constants.dart';
+import 'package:fr3on_fit_app/core/constants.dart';
 import 'package:fr3on_fit_app/features/auth/login_page.dart';
 import 'package:introduction_screen/introduction_screen.dart';
 

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:fr3on_fit_app/main.dart';
+import 'package:fr3on_fit_app/core/widgets/dark_mode_button.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   const CustomAppBar({super.key, required this.title});
@@ -20,14 +20,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       centerTitle: true,
       actions: [
-        IconButton(
-          icon: Icon(isLight ? Icons.dark_mode : Icons.light_mode),
-          onPressed: () {
-            themeModeNotifier.value = isLight
-                ? ThemeMode.dark
-                : ThemeMode.light;
-          },
-        ),
+        DarkModeButton(isLight: isLight),
       ],
     );
   }
@@ -35,3 +28,4 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }
+

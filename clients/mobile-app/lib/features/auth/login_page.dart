@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:fr3on_fit_app/core/constants/constants.dart';
+import 'package:fr3on_fit_app/core/constants.dart';
 import 'package:fr3on_fit_app/features/auth/register_page.dart';
-import 'package:fr3on_fit_app/widgets/custom_app_bar.dart';
-import 'package:fr3on_fit_app/widgets/custom_text_field.dart';
-import 'package:fr3on_fit_app/widgets/primary_button.dart';
-import 'package:fr3on_fit_app/widgets/social_button.dart';
+import 'package:fr3on_fit_app/core/widgets/custom_app_bar.dart';
+import 'package:fr3on_fit_app/core/widgets/custom_text_field.dart';
+import 'package:fr3on_fit_app/core/widgets/primary_button.dart';
+import 'package:fr3on_fit_app/core/widgets/social_button.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
