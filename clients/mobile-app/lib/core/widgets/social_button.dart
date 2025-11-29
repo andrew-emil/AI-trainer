@@ -2,15 +2,17 @@ import 'package:flutter/material.dart';
 
 class SocialButton extends StatelessWidget {
   final String text;
-  final IconData icon;
-  final Color iconColor;
+  final IconData? icon;
+  final Color? iconColor;
+  final Widget? iconWidget;
   final VoidCallback onPressed;
 
   const SocialButton({
     super.key,
     required this.text,
-    required this.icon,
-    required this.iconColor,
+    this.icon,
+    this.iconColor,
+    this.iconWidget,
     required this.onPressed,
   });
 
@@ -22,7 +24,7 @@ class SocialButton extends StatelessWidget {
         style: OutlinedButton.styleFrom(
           side: const BorderSide(color: Colors.transparent),
           padding: const EdgeInsets.symmetric(vertical: 12),
-          backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+          backgroundColor: Theme.of(context).colorScheme.onInverseSurface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
@@ -31,7 +33,7 @@ class SocialButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: iconColor, size: 24),
+            iconWidget ?? Icon(icon, color: iconColor, size: 24),
             const SizedBox(width: 12),
             Text(
               text,
