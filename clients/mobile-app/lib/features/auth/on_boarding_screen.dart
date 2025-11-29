@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fr3on_fit_app/core/constants/constants.dart';
 import 'package:fr3on_fit_app/features/auth/login_page.dart';
 import 'package:introduction_screen/introduction_screen.dart';
 
@@ -40,28 +41,29 @@ class OnBoardingScreen extends StatelessWidget {
           Navigator.of(
             context,
           ).pushReplacement(MaterialPageRoute(builder: (_) => LoginPage()));
-          print("Done Clicked");
         },
 
         onSkip: () {
           Navigator.of(
             context,
           ).pushReplacement(MaterialPageRoute(builder: (_) => LoginPage()));
-          print("Skip Clicked");
         },
 
         showSkipButton: true,
-        skip: const Text("Skip", style: TextStyle(fontWeight: FontWeight.w600)),
-        next: const Icon(Icons.arrow_forward),
+        skip: const Text(
+          "Skip",
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 17),
+        ),
+        next: const Icon(Icons.arrow_forward, size: 25),
         done: const Text(
-          "start",
-          style: TextStyle(fontWeight: FontWeight.w700),
+          "Start",
+          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 17),
         ),
 
         dotsDecorator: DotsDecorator(
           size: const Size.square(10.0),
           activeSize: const Size(20.0, 10.0),
-          activeColor: Colors.blue,
+          activeColor: kPrimaryColor,
           color: Colors.black26,
           spacing: const EdgeInsets.symmetric(horizontal: 3.0),
           activeShape: RoundedRectangleBorder(
@@ -73,7 +75,7 @@ class OnBoardingScreen extends StatelessWidget {
   }
 
   PageDecoration getPageDecoration(BuildContext context) {
-    return  PageDecoration(
+    return PageDecoration(
       titleTextStyle: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
       bodyTextStyle: TextStyle(fontSize: 18),
       imagePadding: EdgeInsets.only(top: 40),
