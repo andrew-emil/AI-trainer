@@ -75,7 +75,7 @@ class RegisterPage extends StatelessWidget {
               SocialButton(
                 text: "Sign in with Google",
                 iconWidget: Image.asset(
-                  "assets/images/icons/google.png",
+                  "assets/icon/google.png",
                   width: 24,
                 ),
                 onPressed: () {},
