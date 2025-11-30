@@ -5,6 +5,7 @@ import 'package:fr3on_fit_app/core/widgets/custom_app_bar.dart';
 import 'package:fr3on_fit_app/core/widgets/custom_text_field.dart';
 import 'package:fr3on_fit_app/core/widgets/primary_button.dart';
 import 'package:fr3on_fit_app/core/widgets/social_button.dart';
+import 'package:fr3on_fit_app/features/auth/workout_page.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
@@ -44,7 +45,12 @@ class LoginPage extends StatelessWidget {
 
               const SizedBox(height: 5),
 
-              PrimaryButton(text: "Login", onPressed: () {}),
+              PrimaryButton(text: "Login", onPressed: () {
+                Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => WorkoutPage()),
+                    );
+              }),
               const SizedBox(height: 5),
 
               Center(
@@ -65,11 +71,11 @@ class LoginPage extends StatelessWidget {
               const SizedBox(height: 20),
 
               Row(
-                children: const [
+                children:  [
                   Expanded(child: Divider(color: Colors.grey)),
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 8),
-                    child: Text("or", style: TextStyle(color: Colors.black)),
+                    child: Text("or", style: TextStyle(color:Theme.of(context).colorScheme.onPrimary)),
                   ),
                   Expanded(child: Divider(color: Colors.grey)),
                 ],
