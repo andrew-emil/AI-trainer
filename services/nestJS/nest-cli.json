@@ -27,6 +27,15 @@
         "tsConfigPath": "libs/contracts/tsconfig.lib.json"
       }
     },
+    "dashboard-service": {
+      "type": "application",
+      "root": "apps/dashboard-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/dashboard-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/dashboard-service/tsconfig.app.json"
+      }
+    },
     "notification-service": {
       "type": "application",
       "root": "apps/notification-service",
