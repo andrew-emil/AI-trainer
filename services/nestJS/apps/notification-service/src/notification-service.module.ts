@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
 import { NotificationServiceController } from './notification-service.controller';
 import { NotificationServiceService } from './notification-service.service';
+import { DrizzleModule } from './drizzle/drizzle.module';
 
 @Module({
-  imports: [],
+  imports: [DrizzleModule],
   controllers: [NotificationServiceController],
   providers: [NotificationServiceService],
 })
