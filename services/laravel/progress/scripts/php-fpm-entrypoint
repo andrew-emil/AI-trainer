@@ -1,0 +1,35 @@
+#!/bin/sh
+set -e
+
+echo "📦 Starting Progress Tracking Service..."
+
+# Wait for PostgreSQL
+echo "⏳ Waiting for PostgreSQL at ${DB_HOST}:${DB_PORT}..."
+until nc -z "$DB_HOST" "$DB_PORT"; do
+  echo "   ↳ Still waiting..."
+  sleep 2
+done
+echo "✅ PostgreSQL is ready!"
+
+# Run migrations
+echo "🚀 Running migrations..."
+php artisan migrate --force || echo "⚠️ Migrations skipped."
+
+# Cache config (routes not needed)
+php artisan config:clear
+php artisan config:cache
+
+# Permissions
+chmod -R 775 storage bootstrap/cache
+chown -R www-data:www-data storage bootstrap/cache
+
+echo "🐇 Starting RabbitMQ workers..."
+
+# Start Event Consumer
+php artisan rabbitmq:consume-events &
+
+# Start RPC Server
+php artisan rabbitmq:progress-rpc &
+
+# Keep container alive
+wait

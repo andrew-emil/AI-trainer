@@ -100,6 +100,33 @@ services:
       - "8001:8000"
     networks:
       - trainer_net
+  # ----------------- Laravel Progress Service -----------------
+  progress-service:
+    build: ./services/progress
+    container_name: progress_service
+    depends_on:
+        rabbitmq:
+          condition: service_healthy
+        postgres:
+          condition: service_started
+    environment:
+        DB_CONNECTION: pgsql
+        DB_HOST: postgres_db
+        DB_PORT: 5432
+        DB_DATABASE: laravel_db
+        DB_USERNAME: admin
+        DB_PASSWORD: admin123
+        RABBITMQ_HOST: rabbitmq
+        RABBITMQ_PORT: 5672
+        RABBITMQ_USER: admin
+        RABBITMQ_PASSWORD: admin123
+        JWT_SECRET: test
+    ports:
+      - "8002:8000"
+    networks:
+      - trainer_net
+
+  
 
   # ----------------- NestJS Chatbot Service -----------------
   # chatbot:

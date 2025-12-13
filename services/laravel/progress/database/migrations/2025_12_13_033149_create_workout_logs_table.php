@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->string('user_id');
             $table->string('workout_id');
-            $table->string('exercise_name');
             $table->json('exercises_performed');
             $table->float('calories_burned')->nullable();
             $table->float('duration_minutes');
