@@ -24,7 +24,8 @@ return new class extends Migration
             $table->float('total_calories_consumed')->nullable();
             $table->float('fat_loss_percentage')->nullable();
             $table->float('muscle_gain_kg')->nullable();
-            $table->float('weight_kg')->nullable();
+            $table->float('weight_kg_starting')->nullable();
+            $table->float('weight_kg_ending')->nullable();
             $table->float('score')->nullable();
             //score can be calculated based on weekly metrics like (total_calories_burned * 0.01  + fat_loss_percentage * 0.1 + muscle_gain_kg * 0.1 + average_daily_progress_score * 0.5) for example
             $table->timestamps();
