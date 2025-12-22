@@ -46,16 +46,24 @@ class WeeklyProgress extends Model
     ];
 
 
-    /**
-     * العلاقة مع سجلات التقدم اليومية (DailyProgress) لهذه الفترة الأسبوعية.
-     * * * ملاحظة: يجب أن تعتمد هذه العلاقة على الكويري (Query) عند الاستخدام،
-     * * حيث لا يوجد عمود foreign key مباشر بينهما.
-     */
-    public function dailyProgresses()
+    protected static function booted()
     {
-        return $this->hasMany(DailyProgress::class, 'user_id', 'user_id')
-            ->whereBetween('progress_date', [$this->week_starting, $this->week_ending]);
+        static::saving(function ($model) {
+
+            $averageDailyScore = DailyProgress::where('user_id', $model->user_id)
+                ->whereBetween('progress_date', [
+                    $model->week_starting,
+                    $model->week_ending
+                ])
+                ->avg('score') ?? 0;
+
+            $model->score = $model->calculateWeeklyScore($averageDailyScore);
+        });
     }
+
+
+
+
 
     public function calculateWeeklyScore(float $averageDailyScore = 0.0): float
     {
@@ -64,17 +72,17 @@ class WeeklyProgress extends Model
         $muscleGainKg = $this->muscle_gain_kg ?? 0;
 
         // 1. حساب نقاط الجهد الأسبوعي (السعرات الحرارية)
-        $caloriesScore = $totalCaloriesBurned * 0.01;
+        $caloriesScore = $totalCaloriesBurned * 0.001;
 
         // 2. حساب نقاط التكوين البدني (الدهون والعضلات)
         // يتم ضرب نسبة فقدان الدهون (مثلاً 0.01 لـ 1%)
-        $bodyCompositionScore = ($fatLossPercentage * 0.1) + ($muscleGainKg * 0.1);
+        $bodyCompositionScore = ($fatLossPercentage * 1) + ($muscleGainKg * 1);
 
         // 3. وزن متوسط السكور اليومي (وهو الأهم)
         $dailyScoreWeight = $averageDailyScore * 0.5;
 
         $finalScore = $caloriesScore + $bodyCompositionScore + $dailyScoreWeight;
 
-        return round($finalScore, 2);
+        return $finalScore;
     }
 }

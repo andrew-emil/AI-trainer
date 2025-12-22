@@ -18,9 +18,6 @@ return new class extends Migration
             $table->float('weight_kg')->nullable();
             $table->float('calories_burned')->nullable();
             $table->float('calories_consumed')->nullable();
-            $table->float('volume')->nullable();
-            $table->json('progress_overload')->nullable();
-            //progress can be made of multiple factors(e.g., weight(if you left higher weight), 1rm(can be calculated by weight*(1+reps/30)), volume(if he makes more reps, or more weight, generaly volume is weight*reps))
             $table->float('score')->nullable();
             //score can be calculated (volume * 0.01 + calories_burned * 0.01 + 0.1 * (progress_overload_weight * 0.3 + progress_overload_1rm * 0.3 + progress_overload_volume * 0.3)) for example
             $table->timestamps();
