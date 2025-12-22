@@ -102,7 +102,7 @@ services:
       - trainer_net
   # ----------------- Laravel Progress Service -----------------
   progress-service:
-    build: ./services/progress
+    build: ./services/laravel/progress
     container_name: progress_service
     depends_on:
         rabbitmq:

@@ -13,12 +13,12 @@ class ProgressWriteService
         return WorkoutLog::create([
             'user_id' => $data['user_id'],
             'workout_id' => $data['workout_id'],
+            'workout_name' => $data['workout_name'],
             'exercises_performed' => json_encode($data['exercises']),
             'calories_burned' => $data['calories_burned'],
             'duration_minutes' => $data['duration_minutes'],
             'workout_date' => $data['workout_date'],
             'notes' => $data['notes'] ?? null,
-            'workout_type' => $data['workout_type'] ?? null,
             'volume' => $data['volume'] ?? null,
             'created_at' => now(),
         ]);

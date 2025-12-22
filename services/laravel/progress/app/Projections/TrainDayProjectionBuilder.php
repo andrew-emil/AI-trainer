@@ -8,15 +8,19 @@ use App\Models\WorkoutLog;
 
 class TrainDayProjectionBuilder
 {
-    /**
-     * Build or rebuild a Train Day Progress snapshot
-     *
-     * @param int $userId
-     * @param string $trainDayName
-     * @return TrainDayProgress
-     */
-    public function rebuildTrainDay(int $userId, string $trainDayName): TrainDayProgress
+
+    public function rebuildTrainDay(int $userId, int $workoutId)
     {
+
+        $workout = WorkoutLog::where('user_id', $userId)
+            ->where('workout_id', $workoutId)
+            ->first();
+
+        if (!$workout) {
+            return null;
+        }
+
+        $trainDayName = $workout->workout_name;
 
         $trainDay = TrainDayProgress::firstOrCreate(
             [

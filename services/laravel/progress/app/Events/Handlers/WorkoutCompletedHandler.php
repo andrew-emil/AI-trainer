@@ -10,9 +10,15 @@ class WorkoutCompletedHandler
     public function handle(array $event)
     {
         $write = app(ProgressWriteService::class);
-        $builder = app(DailyProjectionBuilder::class);
+        $dailyBuilder = app(DailyProjectionBuilder::class);
+        $weeklyBuilder = app(\App\Projections\WeeklyProjectionBuilder::class);
+        $exerciseBuilder = app(\App\Projections\ExerciseProjectionBuilder::class);
+        $trainDayBuilder = app(\App\Projections\TrainDayProjectionBuilder::class);
 
         $write->logWorkout($event['payload']);
-        $builder->rebuildDaily($event['payload']['user_id']);
+        $dailyBuilder->rebuildDaily($event['payload']['user_id']);
+        $weeklyBuilder->rebuildWeekly($event['payload']['user_id']);
+        $exerciseBuilder->rebuildExercise($event['payload']['user_id']);
+        $trainDayBuilder->rebuildTrainDay($event['payload']['user_id'], $event['payload']['workout_id']);
     }
 }

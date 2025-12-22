@@ -2,7 +2,7 @@
 
 namespace App\Events\Handlers;
 
-use App\Projections\DailyProjectionBuilder;
+use App\Projections\WeeklyProjectionBuilder;
 use App\Services\ProgressWriteService;
 
 class BodyMeasurementsHandler
@@ -10,9 +10,9 @@ class BodyMeasurementsHandler
     public function handle(array $event)
     {
         $write = app(ProgressWriteService::class);
-        $builder = app(DailyProjectionBuilder::class);
+        $builder = app(WeeklyProjectionBuilder::class);
 
-        $write->logNutrition($event['payload']);
-        $builder->rebuildDaily($event['payload']['user_id']);
+        $write->logBodyMeasurement($event['payload']);
+        $builder->rebuildWeekly($event['payload']['user_id']);
     }
 }
