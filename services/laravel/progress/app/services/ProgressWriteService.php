@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\BodyMeasurement;
 use App\Models\NutritionLog;
 use App\Models\WorkoutLog;
 
@@ -11,10 +12,15 @@ class ProgressWriteService
     {
         return WorkoutLog::create([
             'user_id' => $data['user_id'],
-            'duration_min' => $data['duration'],
-            'calories' => $data['calories'],
-            'type' => $data['type'],
-            'performed_at' => now(),
+            'workout_id' => $data['workout_id'],
+            'exercises_performed' => json_encode($data['exercises']),
+            'calories_burned' => $data['calories_burned'],
+            'duration_minutes' => $data['duration_minutes'],
+            'workout_date' => $data['workout_date'],
+            'notes' => $data['notes'] ?? null,
+            'workout_type' => $data['workout_type'] ?? null,
+            'volume' => $data['volume'] ?? null,
+            'created_at' => now(),
         ]);
     }
 
@@ -22,11 +28,26 @@ class ProgressWriteService
     {
         return NutritionLog::create([
             'user_id' => $data['user_id'],
-            'calories_in' => $data['calories_in'],
-            'protein' => $data['protein'],
-            'carbs' => $data['carbs'],
-            'fat' => $data['fat'],
-            'logged_at' => now(),
+            'log_date' => $data['log_date'],
+            'calories_consumed' => $data['calories_consumed'],
+            'protein_grams' => $data['protein_grams'] ?? null,
+            'carbohydrates_grams' => $data['carbohydrates_grams'] ?? null,
+            'fats_grams' => $data['fats_grams'] ?? null,
+            'meals_description' => $data['meals_description'] ?? null,
+            'created_at' => now(),
+        ]);
+    }
+
+    public function logBodyMeasurement($data)
+    {
+        return BodyMeasurement::created([
+            'user_id' => $data['user_id'],
+            'measurement_date' => $data['measurement_date'],
+            'weight_kg' => $data['weight_kg'] ?? null,
+            'body_fat_percentage' => $data['body_fat_percentage'] ?? null,
+            'muscle_mass_kg' => $data['muscle_mass_kg'] ?? null,
+            'bmr' => $data['bmr'] ?? null,
+            'created_at' => now(),
         ]);
     }
 }

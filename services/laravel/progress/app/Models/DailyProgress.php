@@ -19,8 +19,6 @@ class DailyProgress extends Model
         'weight_kg',
         'calories_burned',
         'calories_consumed',
-        'volume',
-        'progress_overload',
         'score',
     ];
 
@@ -30,8 +28,6 @@ class DailyProgress extends Model
         'weight_kg' => 'float',
         'calories_burned' => 'float',
         'calories_consumed' => 'float',
-        'volume' => 'float',
-        'progress_overload' => 'array',
         'score' => 'float',
     ];
 
@@ -46,35 +42,24 @@ class DailyProgress extends Model
 
     public function calculateScore(): float
     {
-        // تهيئة المتغيرات
-        $volumeScore = $this->volume ?? 0;
-        $caloriesBurnedScore = $this->calories_burned ?? 0;
-        $overloadData = $this->progress_overload ?? [];
+        $weightFactor = 0.2;
+        $caloriesBurnedFactor = 0.5;
+        $caloriesConsumedFactor = 0.3;
 
-        $progressWeight = $overloadData['weight_gain'] ?? 0;
-        $progress1RM = $overloadData['one_rep_max_gain'] ?? 0;
-        $progressVolume = $overloadData['volume_gain'] ?? 0;
+        $score = 0.0;
 
-        // 1. حساب الجزء الخاص بالجهد اليومي
-        $dailyEffortScore = ($volumeScore * 0.01) + ($caloriesBurnedScore * 0.01);
+        if ($this->weight_kg !== null) {
+            $score += $this->weight_kg * $weightFactor;
+        }
 
-        // 2. حساب الجزء الخاص بالتطور (Progressive Overload)
-        $progressTotal = (
-            ($progressWeight * 0.3) +
-            ($progress1RM * 0.3) +
-            ($progressVolume * 0.3)
-        );
+        if ($this->calories_burned !== null) {
+            $score += $this->calories_burned * $caloriesBurnedFactor;
+        }
 
-        // تطبيق وزن الـ Overload (الـ 0.1 في المعادلة المقترحة)
-        $overloadBonus = 0.1 * $progressTotal;
+        if ($this->calories_consumed !== null) {
+            $score += $this->calories_consumed * $caloriesConsumedFactor;
+        }
 
-        // 3. السكور الكلي
-        $finalScore = $dailyEffortScore + $overloadBonus;
-
-        // إضافة وزن إيجابي للسعرات المستهلكة (للتشجيع على الأكل الكافي للتعافي)
-        // إذا كنت تستهدف البناء العضلي، قد ترغب في مكافأة الاستهلاك الكافي للبروتين.
-        // $finalScore += ($this->calories_consumed ?? 0) * 0.005; // مثال: 500 سعرة إضافية = 2.5 نقطة بونص
-
-        return round($finalScore, 2);
+        return $score;
     }
 }
