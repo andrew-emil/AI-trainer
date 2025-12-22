@@ -26,7 +26,7 @@ chown -R www-data:www-data storage bootstrap/cache
 echo "🐇 Starting RabbitMQ workers..."
 
 # Start Event Consumer
-php artisan rabbitmq:consume-events &
+# php artisan rabbitmq:consume-events &
 
 # Start RPC Server
 php artisan rabbitmq:progress-rpc &

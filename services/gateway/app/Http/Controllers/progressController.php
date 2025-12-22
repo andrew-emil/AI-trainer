@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Infrastructure\RabbitMQRpcClient;
 use App\Traits\ValidatesJwt;
+use Illuminate\Http\Request;
 
 class ProgressController extends Controller
 {

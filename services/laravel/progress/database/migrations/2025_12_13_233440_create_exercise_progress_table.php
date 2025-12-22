@@ -19,7 +19,7 @@ return new class extends Migration
             //progress can be made of multiple factors(e.g., weight(if you left higher weight), 1rm(can be calculated by weight*(1+reps/30)), volume(if he makes more reps, or more weight, generaly volume is weight*reps))
             $table->float('score')->nullable();
             //score = (0.1 * new weight + 0.001 * volume + 0.3 * 1rm)
-            $table->foreignId('train_day_id')->constrained('train_day', 'id');
+            $table->foreignId('train_day_id')->constrained('train_day_progress', 'id');
             $table->timestamps();
         });
     }
