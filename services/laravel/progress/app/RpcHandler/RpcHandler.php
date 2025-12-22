@@ -17,22 +17,32 @@ class RpcHandler
     {
         return match ($request['action'] ?? null) {
 
+            // الحصول على تقدم يومي
             'get_daily_progress' =>
-            $this->readService->getDaily(
+            $this->readService->getDailyProgress(
                 $request['payload']['user_id'],
                 $request['payload']['date'] ?? null
             ),
 
+            // الحصول على تقدم أسبوعي
             'get_weekly_progress' =>
-            $this->readService->getWeekly(
+            $this->readService->getWeeklyProgress(
                 $request['payload']['user_id'],
-                $request['payload']['start_date'] ?? null
+                $request['payload']['week_start'] ?? null
             ),
 
-            'get_monthly_progress' =>
-            $this->readService->getMonthly(
+            // الحصول على تقدم التمرين
+            'get_exercise_progress' =>
+            $this->readService->getExercise(
                 $request['payload']['user_id'],
-                $request['payload']['month'] ?? null
+                $request['payload']['exercise_name'] ?? null
+            ),
+
+            // الحصول على تقدم يوم التدريب (TrainDay)
+            'get_train_day_progress' =>
+            $this->readService->getTrainDayProgress(
+                $request['payload']['user_id'],
+                $request['payload']['train_day_name'] ?? null
             ),
 
             default => [

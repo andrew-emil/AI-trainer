@@ -11,15 +11,15 @@ use Carbon\Carbon;
 
 class WeeklyProjectionBuilder
 {
-    public function rebuildWeekly(int $userId, ?Carbon $weekStart = null, array $data): WeeklyProgress
+    public function rebuildWeekly(int $userId): WeeklyProgress
     {
-        // تحديد بداية ونهاية الأسبوع
-        $weekStart = $weekStart ?? now()->startOfWeek();
-        $weekEnd   = (clone $weekStart)->endOfWeek();
+
+        $weekStart = Carbon::now()->startOfWeek(Carbon::FRIDAY);
+        $weekEnd   = $weekStart->copy()->endOfWeek(Carbon::THURSDAY);
 
         // جمع سجلات التقدم اليومي للأسبوع
         $dailyProgress = DailyProgress::where('user_id', $userId)
-            ->whereBetween('progress_date', [$weekStart, $weekEnd])
+            ->whereBetween('progress_date', [$weekStart->toDateString(), $weekEnd->toDateString()])
             ->orderBy('progress_date')
             ->get();
 

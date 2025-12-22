@@ -15,12 +15,12 @@ return new class extends Migration
             $table->id();
             $table->string('user_id');
             $table->string('workout_id');
+            $table->string('workout_name');
             $table->json('exercises_performed');
             $table->float('calories_burned')->nullable();
             $table->float('duration_minutes');
             $table->date('workout_date');
             $table->text('notes')->nullable();
-            $table->string('workout_type')->nullable();
             $table->float('volume')->nullable();
             $table->timestamps();
         });
