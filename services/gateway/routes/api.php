@@ -17,6 +17,7 @@ Route::post('/users/forgetPassword', [UserController::class, 'forgetPassword']);
 Route::post('/users/resetPassword', [UserController::class, 'resetPassword']);
 
 
+
 // Prefix all routes with 'progress' for clarity
 Route::prefix('progress')->group(function () {
 
