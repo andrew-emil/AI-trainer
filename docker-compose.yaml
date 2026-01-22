@@ -176,18 +176,9 @@ services:
   # notification-service:
   #   container_name: notification-service
   #   build:
-  #     context: ./service/nestJS
-  #     args:
-  #       APP_NAME: notification-service
-  #   environment:
-  #     APP_NAME: notification-service
-  #     DB_CONNECTION: pgsql
-  #     DB_HOST: postgres_db
-  #     DB_PORT: 5432
-  #     DB_DATABASE: notification_db
-  #     DB_USERNAME: admin
-  #     DB_PASSWORD: admin123
-  #     NODE_ENV: development
+  #     context: ./service/nestJS/notification-service
+  #   env_file:
+  #     - ./service/nestJS/notification-service/.env
   #   volumes:
   #     - /usr/src/app/node_modules
   #   depends_on:
@@ -196,8 +187,8 @@ services:
   #     rabbitmq:
   #       condition: service_healthy
   #   ports:
-  #     - "3002:3000"
-  #   command: ["sh", "-c", "npm run start:dev stream-service"]
+  #     - "3002:3001"
+  #   command: ["sh", "-c", "npm run start:dev"]
   #   restart: unless-stopped
   #   networks:
   #     - trainer_net

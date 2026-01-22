@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum NotificationType {
+  PasswordReset
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  type      NotificationType
+  title     String
+  content   String
+  deep_link String?
+
+  readAt DateTime?
+
+  createdAt DateTime @default(now())
+}
+
+model preferences {
+  id               String           @id @default(uuid())
+  userId           String
+  notificationType NotificationType
+  isEnabled        Boolean          @default(true)
+}
+
+model GlobalNotification {
+  id        String           @id @default(uuid())
+  type      NotificationType
+  title     String
+  content   String
+  deep_link String?
+
+  createdAt DateTime @default(now())
+
+  userGlobalNotificationStatus UserGlobalNotificationStatus[]
+}
+
+model UserGlobalNotificationStatus {
+  id                   String             @id @default(uuid())
+  userId               String
+  globalNotificationId String
+  globalNotification   GlobalNotification @relation(fields: [globalNotificationId], references: [id], onDelete: Cascade)
+
+  readAt DateTime?
+}
