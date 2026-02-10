@@ -20,26 +20,28 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
-    "@nestjs/common": "^11.0.1",
-    "@nestjs/config": "^1.1.5",
-    "@nestjs/core": "^11.0.1",
-    "@nestjs/microservices": "^11.1.12",
-    "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/common": "^11.1.13",
+    "@nestjs/config": "^4.0.3",
+    "@nestjs/core": "^11.1.13",
+    "@nestjs/microservices": "^11.1.13",
+    "@nestjs/platform-express": "^11.1.13",
     "@prisma/adapter-pg": "^7.3.0",
     "@prisma/client": "^7.3.0",
+    "amqp-connection-manager": "^5.0.0",
+    "amqplib": "^0.10.9",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.3",
     "joi": "^18.0.2",
-    "pg": "^8.17.2",
+    "pg": "^8.18.0",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
-    "@nestjs/testing": "^11.0.1",
+    "@nestjs/testing": "^11.1.13",
     "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^22.10.7",
@@ -58,7 +60,11 @@
     "typescript-eslint": "^8.20.0"
   },
   "overrides": {
-    "lodash": "4.17.23"
+    "mjml": "^5.0.0-alpha.8",
+    "glob": "^10.5.0",
+    "hono": "^4.11.4",
+    "diff": "^8.0.3",
+    "lodash": "^4.17.22"
   },
   "jest": {
     "moduleFileExtensions": [
