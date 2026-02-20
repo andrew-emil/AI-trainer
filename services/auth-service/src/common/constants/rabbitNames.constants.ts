@@ -1,0 +1,2 @@
+export const COACH_DOMAIN_QUEUE = Symbol("COACH_DOMAIN_QUEUE");
+export const INTERACTION_QUEUE = Symbol("INTERACTION_QUEUE");
