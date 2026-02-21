@@ -4,4 +4,5 @@ export enum AuthPatterns {
     registerAsTrainer = "auth.registerAsTrainer",
     forgetPassword = "auth.forgetPassword",
     resetPassword = "auth.resetPassword",
+    refresh = "auth.refresh",
 }

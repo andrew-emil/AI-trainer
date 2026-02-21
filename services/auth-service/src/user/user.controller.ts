@@ -1,8 +1,8 @@
 import { Controller } from '@nestjs/common';
-import { UserService } from './user.service';
 import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { UserPattern } from 'src/common/enums/userPatterns.enum';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { UserService } from './user.service';
 
 @Controller('user')
 export class UserController {
@@ -13,9 +13,9 @@ export class UserController {
         return this.userService.findOne(userId);
     }
 
-    @EventPattern(UserPattern.UPDATE)
+    @MessagePattern(UserPattern.UPDATE)
     updateUser(@Payload() updateUserDto: UpdateUserDto) {
-        this.userService.update(updateUserDto.userId, updateUserDto);
+        return this.userService.update(updateUserDto.userId, updateUserDto);
     }
 
     @EventPattern(UserPattern.DELETE)

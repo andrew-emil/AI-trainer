@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, ValidationPipe } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import Joi from 'joi';
 import { AuthModule } from './auth/auth.module';
@@ -10,6 +10,7 @@ import rabbitConfig, { rabbitSchema } from './config/rabbit.config';
 import { PrismaModule } from './prisma/prisma.module';
 import { RabbitProducerModule } from './rabbit-producer/rabbit-producer.module';
 import { UserModule } from './user/user.module';
+import { APP_PIPE } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -28,6 +29,20 @@ import { UserModule } from './user/user.module';
     PrismaModule,
     RabbitProducerModule,
   ],
-  providers: [HashingService, CloudinaryProvider],
+  providers: [
+    HashingService,
+    CloudinaryProvider,
+    {
+      provide: APP_PIPE,
+      useValue: new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+        transformOptions: {
+          enableImplicitConversion: true,
+        },
+      })
+    }
+  ],
 })
 export class AppModule { }

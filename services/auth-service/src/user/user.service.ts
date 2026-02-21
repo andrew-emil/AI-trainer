@@ -138,7 +138,7 @@ export class UserService {
 
         if (avatarId) await this.cloudinaryProvider.deleteImage(avatarId);
 
-        return await this.prisma.user.delete({
+        await this.prisma.user.delete({
             where: { id },
             select: {
                 id: true,

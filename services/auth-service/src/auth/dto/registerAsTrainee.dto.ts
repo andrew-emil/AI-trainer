@@ -1,5 +1,5 @@
 import { IsEnum, IsNotEmpty, IsNumber, Max, Min } from "class-validator";
-import { TraineeGoal } from "src/prisma/generated";
+import { TraineeGoal } from "@prisma/client";
 import { CreateUserDto } from "src/user/dto/create-user.dto";
 
 export class RegisterAsTraineeDto extends CreateUserDto {

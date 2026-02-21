@@ -1,6 +1,6 @@
 generator client {
     provider = "prisma-client-js"
-    output   = "../src/prisma/generated"
+
 }
 
 datasource db {
@@ -27,7 +27,7 @@ enum Gender {
     unknown
 }
 
-enum TrainerRequestStatus {
+enum TrainerApplicationStatus {
     pending
     approved
     rejected
@@ -63,8 +63,26 @@ model User {
     trainee Trainee?
     trainer Trainer?
 
-    trainerRequests     TrainerRequest[]
+    trainerApplications TrainerApplication[]
+    refreshSessions     RefreshSession[]
     resetPasswordTokens ResetPasswordToken[]
+
+    @@index([email])
+    @@index([username])
+}
+
+model RefreshSession {
+    id          String   @id @default(uuid())
+    userId      String
+    refreshHash String // store hashed refresh token
+    expiresAt   DateTime
+    createdAt   DateTime @default(now())
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@index([userId])
+    @@index([expiresAt])
+    @@index([refreshHash])
 }
 
 model Trainee {
@@ -75,9 +93,7 @@ model Trainee {
     isActive  Boolean     @default(true)
 
     // Relations
-    user                   User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
-    trainerTrainee         TrainerTrainee?
-    trainerTraineeRequests TrainerTraineeRequest[]
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Trainer {
@@ -95,15 +111,12 @@ model Trainer {
 
     certifications  TrainerCertification[]
     transformations TrainerTransformation[]
-
-    traineeRequests TrainerTraineeRequest[]
-    trainerTrainees TrainerTrainee[]
 }
 
 model TrainerCertification {
     id               String    @id @default(uuid())
     trainerId        String?
-    trainerRequestId String? // FK جديد لربط الـ request
+    trainerRequestId String?
     name             String
     imageUrl         String
     imagePublicId    String
@@ -112,8 +125,8 @@ model TrainerCertification {
     updatedAt        DateTime  @updatedAt
     createdAt        DateTime  @default(now())
 
-    trainer        Trainer?        @relation(fields: [trainerId], references: [userId], onDelete: Cascade)
-    trainerRequest TrainerRequest? @relation(fields: [trainerRequestId], references: [id])
+    trainer        Trainer?            @relation(fields: [trainerId], references: [userId], onDelete: Cascade)
+    trainerRequest TrainerApplication? @relation(fields: [trainerRequestId], references: [id])
 
     @@unique([trainerId, name, imageUrl])
     @@index([trainerId])
@@ -123,15 +136,15 @@ model TrainerCertification {
 model TrainerTransformation {
     id               String   @id @default(uuid())
     trainerId        String?
-    trainerRequestId String? // FK جديد لربط الـ request
+    trainerRequestId String?
     name             String
     imageUrl         String
     imagePublicId    String?
     createdAt        DateTime @default(now())
     updatedAt        DateTime @updatedAt
 
-    trainer        Trainer?        @relation(fields: [trainerId], references: [userId], onDelete: Cascade)
-    trainerRequest TrainerRequest? @relation(fields: [trainerRequestId], references: [id])
+    trainer        Trainer?            @relation(fields: [trainerId], references: [userId], onDelete: Cascade)
+    trainerRequest TrainerApplication? @relation(fields: [trainerRequestId], references: [id])
 
     @@unique([trainerId, name, imageUrl])
     @@index([trainerId])
@@ -152,11 +165,11 @@ model ResetPasswordToken {
     @@index([tokenHash])
 }
 
-model TrainerRequest {
+model TrainerApplication {
     id     String @id @default(uuid())
     userId String @unique
 
-    status    TrainerRequestStatus @default(pending)
+    status    TrainerApplicationStatus @default(pending)
     adminNote String?
 
     createdAt DateTime @default(now())
@@ -168,36 +181,4 @@ model TrainerRequest {
     transformations TrainerTransformation[]
 
     @@index([status])
-}
-
-model TrainerTrainee {
-    id               String           @id @default(uuid())
-    trainerId        String
-    traineeId        String           @unique
-    membershipStatus membershipStatus @default(active)
-    sessionsCount    Int
-    assignedAt       DateTime?
-    createdAt        DateTime         @default(now())
-
-    trainee Trainee @relation(fields: [traineeId], references: [userId], onDelete: Cascade)
-    trainer Trainer @relation(fields: [trainerId], references: [userId], onDelete: Cascade)
-
-    @@unique([trainerId, traineeId])
-    @@index([trainerId])
-}
-
-model TrainerTraineeRequest {
-    id            String        @id @default(uuid())
-    trainerId     String
-    traineeId     String
-    sessionsCount Int
-    status        RequestStatus @default(pending)
-    createdAt     DateTime      @default(now())
-    respondedAt   DateTime?
-
-    trainer Trainer @relation(fields: [trainerId], references: [userId], onDelete: Cascade)
-    trainee Trainee @relation(fields: [traineeId], references: [userId], onDelete: Cascade)
-
-    @@index([trainerId])
-    @@index([traineeId])
 }

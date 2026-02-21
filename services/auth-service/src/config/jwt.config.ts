@@ -8,6 +8,7 @@ export const jwtSchema = Joi.object({
     REFRESH_TOKEN_EXPIRATION_TIME: Joi.string().required().default("60d"),
 })
 
+
 export default registerAs('jwt', () => ({
     secret: process.env.JWT_SECRET,
     expirationTime: process.env.JWT_EXPIRATION_TIME,
