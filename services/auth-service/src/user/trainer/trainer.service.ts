@@ -3,8 +3,8 @@ import { CloudinaryProvider } from 'src/common/providers/cloudinary.provider';
 import { TrainerConversionUtil } from 'src/common/utils/trainer-conversion.util';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateTrainerDto } from './dto/create-trainer.dto';
-import { CreatedTrainer } from './dto/createdTrainer.dto';
 import { UpdateTrainerDto } from './dto/update-trainer.dto';
+import { CreatedTrainer } from './dto/createdTrainer.dto';
 
 @Injectable()
 export class TrainerService {
@@ -27,7 +27,7 @@ export class TrainerService {
         const { userId, bio, experienceYears, certifications, transformations } =
             dto;
 
-        const trainer = (await this.prisma.trainer.create({
+        return await this.prisma.trainer.create({
             data: {
                 userId,
                 bio,
@@ -55,7 +55,7 @@ export class TrainerService {
                     : undefined,
             },
             include: { user: true },
-        })) as CreatedTrainer;
+        }) as CreatedTrainer;
     }
 
     async findAll() {

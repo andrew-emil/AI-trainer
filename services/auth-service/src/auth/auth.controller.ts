@@ -36,4 +36,9 @@ export class AuthController {
     return this.authService.resetPassword(resetPasswordDto.password, resetPasswordDto.token);
   }
 
+  @MessagePattern(AuthPatterns.refresh)
+  refresh(@Payload() refreshToken: string) {
+    return this.authService.refresh(refreshToken);
+  }
+
 }

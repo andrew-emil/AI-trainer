@@ -13,26 +13,26 @@ services:
     networks:
       - trainer_net
 
-  mongo:
-    image: mongo:7
-    container_name: mongo_db
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodata:/data/db
-    networks:
-      - trainer_net
+  #mongo:
+  # image: mongo:7
+  #container_name: mongo_db
+  #ports:
+  # - "27017:27017"
+  # volumes:
+  #  - mongodata:/data/db
+  #networks:
+  # - trainer_net
   # ----------------- Redis ---------------------------
-  redis:
-    image: redis:7
-    container_name: redis
-    ports:
-      - "6379:6379"
-    command: ["redis-server", "--appendonly", "yes"]
-    volumes:
-      - redis_data:/data
-    networks:
-      - trainer_net
+  # redis:
+  #  image: redis:7
+  # container_name: redis
+  #ports:
+  # - "6379:6379"
+  #command: ["redis-server", "--appendonly", "yes"]
+  #volumes:
+  #  - redis_data:/data
+  #networks:
+  # - trainer_net
 
   # ----------------- RabbitMQ -----------------
   rabbitmq:
@@ -54,145 +54,30 @@ services:
       timeout: 5s
       retries: 5
 
-  # ----------------- Laravel Gateway -----------------
-  # gateway-service:
-  #   build: ./services/gateway
-  #   container_name: gateway_service
-  #   depends_on:
-  #     - rabbitmq
-  #   environment:
-  #     RABBITMQ_HOST: rabbitmq
-  #     RABBITMQ_PORT: 5672
-  #     RABBITMQ_USER: admin
-  #     RABBITMQ_PASSWORD: admin123
-  #     APP_ENV: local
-  #     APP_DEBUG: "true"
-  #   ports:
-  #     - "8080:8000"
-  #   networks:
-  #     - trainer_net
-
-  # ----------------- Laravel User Service -----------------
-  # user-service:
-  #   build: ./services/laravel/users
-  #   container_name: user_service
-  #   depends_on:
-  #     rabbitmq:
-  #       condition: service_healthy
-  #     postgres:
-  #       condition: service_started
-  #   environment:
-  #     DB_CONNECTION: pgsql
-  #     DB_HOST: postgres_db
-  #     DB_PORT: 5432
-  #     DB_DATABASE: laravel_db
-  #     DB_USERNAME: admin
-  #     DB_PASSWORD: admin123
-  #     RABBITMQ_HOST: rabbitmq
-  #     RABBITMQ_PORT: 5672
-  #     RABBITMQ_USER: admin
-  #     RABBITMQ_PASSWORD: admin123
-  #     JWT_SECRET: test
-  #   ports:
-  #     - "8001:8000"
-  #   networks:
-  #     - trainer_net
-  # ----------------- Laravel Progress Service -----------------
-  # progress-service:
-  #   build: ./services/laravel/progress
-  #   container_name: progress_service
-  #   depends_on:
-  #     rabbitmq:
-  #       condition: service_healthy
-  #     postgres:
-  #       condition: service_started
-  #   environment:
-  #     DB_CONNECTION: pgsql
-  #     DB_HOST: postgres_db
-  #     DB_PORT: 5432
-  #     DB_DATABASE: laravel_db
-  #     DB_USERNAME: admin
-  #     DB_PASSWORD: admin123
-  #     RABBITMQ_HOST: rabbitmq
-  #     RABBITMQ_PORT: 5672
-  #     RABBITMQ_USER: admin
-  #     RABBITMQ_PASSWORD: admin123
-  #     JWT_SECRET: test
-  #   ports:
-  #     - "8002:8000"
-  #   networks:
-  #     - trainer_net
-
-  # ----------------- NestJS Chatbot Service -----------------
-  # chatbot:
-  #   container_name: chatbot
-  #   build:
-  #     context: ./service/nestJS/chatbot-service
-  #   env_file:
-  #     - ./service/nestJS/chatbot-service/.env
-  #   depends_on:
-  #     mongo:
-  #       condition: service_started
-  #     rabbitmq:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_started
-  #   ports:
-  #     - "3001:3000"
-  #   command: ["sh", "-c", "npm run start:dev"]
-  #   restart: unless-stopped
-  #   networks:
-  #     - trainer_net
-
-  # # ----------------- NestJS stream Service -----------------
-  # stream-service:
-  #   container_name: stream-service
-  #   build:
-  #     context: ./service/nestJS
-  #     args:
-  #       APP_NAME: stream-service
-  #   environment:
-  #     - APP_NAME=stream-service
-  #     - MONGO_URI=mongodb://mongo:27017/stream_db
-  #     - NODE_ENV=development
-  #   volumes:
-  #     - /usr/src/app/node_modules
-  #   depends_on:
-  #     mongo:
-  #       condition: service_started
-  #     rabbitmq:
-  #       condition: service_healthy
-  #   ports:
-  #     - "3001:3000"
-  #   command: ["sh", "-c", "npm run start:dev stream-service"]
-  #   restart: unless-stopped
-  #   networks:
-  #     - trainer_net
-
-  #   # ----------------- NestJS notification Service -----------------
-  notification-service:
-    container_name: notification-service
+  # ----------------- NestJS Auth Service -----------------
+  auth-service:
+    container_name: auth-service
     build:
-      context: ./services/nestJS/notification-service
+      context: ./services/auth-service
     env_file:
-      - ./services/nestJS/notification-service/.env
-    volumes:
-      - /usr/src/app/node_modules
+      - ./services/auth-service/.env
     depends_on:
       postgres:
         condition: service_started
       rabbitmq:
         condition: service_healthy
     ports:
-      - "3002:3001"
+      - "3001:3000"
     command: >
       sh -c "
       npx prisma generate &&
-      npx prisma migrate dev --name init &&
       npx prisma migrate deploy &&
       npm run start:dev
       "
     restart: unless-stopped
+    volumes:
+      - ./services/auth-service:/app
+      - /app/node_modules
     networks:
       - trainer_net
 
@@ -202,6 +87,6 @@ networks:
 
 volumes:
   pgdata:
-  mongodata:
+  # mongodata:
   rabbitmq_data:
-  redis_data:
+  # redis_data:

@@ -1,5 +1,6 @@
 import { Gender, UserRole } from "@prisma/client";
 
+
 export type CreatedTrainer = {
   user: {
     createdAt: Date;

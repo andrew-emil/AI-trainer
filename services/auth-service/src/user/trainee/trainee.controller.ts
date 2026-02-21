@@ -1,21 +1,14 @@
-import { Controller, Get, Param } from '@nestjs/common';
-import { RequestsProvider } from './providers/requests.provider';
-import { TraineeService } from './trainee.service';
+import { Controller } from '@nestjs/common';
 import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
 import { TraineePatterns } from 'src/common/enums/traineePatterns.enum';
 import { UpdateTraineeDto } from './dto/updateTrainee.dto';
+import { TraineeService } from './trainee.service';
 
 @Controller('trainee')
 export class TraineeController {
     constructor(
-        private readonly requestsProvider: RequestsProvider,
         private readonly traineeService: TraineeService
     ) { }
-
-    @MessagePattern(TraineePatterns.GET_ASSIGNED_TRAINERS)
-    getAssignedTrainers(@Payload() payload: { userId: string }) {
-        return this.requestsProvider.getAssignedTrainers(payload.userId);
-    }
 
     @MessagePattern(TraineePatterns.FIND_ALL)
     findAll() {
@@ -35,16 +28,5 @@ export class TraineeController {
     @EventPattern(TraineePatterns.DELETE)
     remove(@Payload() payload: { id: string }) {
         this.traineeService.delete(payload.id);
-    }
-
-    @MessagePattern(TraineePatterns.CREATE_TRAINER_REQUEST)
-    createTrainerRequest(
-        @Payload() payload: { traineeId: string, trainerId: string, sessionsCount: number },
-    ) {
-        return this.requestsProvider.createTrainerRequest(
-            payload.traineeId,
-            payload.trainerId,
-            payload.sessionsCount,
-        );
     }
 }

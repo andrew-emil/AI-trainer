@@ -1,9 +1,10 @@
-import { Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
-import crypto from 'crypto';
+import { Inject, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
+import type { ConfigType } from '@nestjs/config';
 import { EmailPatterns } from 'src/common/enums/emailPatterns.enum';
 import { NotificationPatterns } from 'src/common/enums/traineePatterns.enum';
 import { HashingService } from 'src/common/hashing/hashing.service';
-import { User, UserRole } from 'src/prisma/generated';
+import jwtConfiguration from 'src/config/jwt.config';
+import { User, UserRole } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RabbitProducerService } from 'src/rabbit-producer/rabbit-producer.service';
 import { TraineeService } from 'src/user/trainee/trainee.service';
@@ -24,6 +25,8 @@ export class AuthService {
         private readonly trainerService: TrainerService,
         private readonly traineeService: TraineeService,
         private readonly rabbitProducerService: RabbitProducerService,
+        @Inject(jwtConfiguration.KEY)
+        private readonly jwtConfig: ConfigType<typeof jwtConfiguration>,
     ) { }
 
     async validateUser(email: string, password: string) {
@@ -58,7 +61,9 @@ export class AuthService {
                 throw new UnauthorizedException("Trainee is not active");
         }
 
-        const { accessToken, refreshToken } = await this.tokenProvider.generateJwt(user);
+        const { accessToken } = await this.tokenProvider.generateJwt(user);
+        const refreshToken = this.tokenProvider.generateRandomToken();
+        await this.createRefreshSession(user.id, refreshToken);
         return { accessToken, refreshToken };
     }
 
@@ -66,7 +71,7 @@ export class AuthService {
         const user = await this.userService.findByEmail(email);
         if (!user) throw new UnauthorizedException("User not found");
 
-        const resetToken = crypto.randomBytes(32).toString("hex");
+        const resetToken = this.tokenProvider.generateRandomToken(32);
         const resetTokenHash = this.hashingService.hashToken(resetToken);
         const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
 
@@ -172,8 +177,9 @@ export class AuthService {
             userRole: UserRole.trainee,
         });
 
-        const { accessToken, refreshToken } = await this.tokenProvider.generateJwt(user as User);
-
+        const { accessToken } = await this.tokenProvider.generateJwt(user as User);
+        const refreshToken = this.tokenProvider.generateRandomToken();
+        await this.createRefreshSession(user.id, refreshToken);
         return { accessToken, refreshToken };
     }
 
@@ -206,7 +212,7 @@ export class AuthService {
                 },
             });
 
-            const trainerRequest = await tx.trainerRequest.create({
+            const trainerRequest = await tx.trainerApplication.create({
                 data: {
                     userId: user.id,
                 },
@@ -242,5 +248,48 @@ export class AuthService {
         return {
             message: "Trainer registered successfully, wait for admin approval",
         };
+    }
+
+    async refresh(refreshToken: string) {
+        const refreshHash = this.hashingService.hashToken(refreshToken);
+        const now = new Date();
+
+        const session = await this.prisma.refreshSession.findFirst({
+            where: { refreshHash },
+            include: { user: true },
+        });
+
+        if (!session || session.expiresAt <= now) {
+            throw new UnauthorizedException('Invalid or expired refresh token');
+        }
+
+        const user = session.user;
+        const newRefreshToken = this.tokenProvider.generateRandomToken();
+        const newExpiry = new Date(Date.now() + Number(this.jwtConfig.refreshTokenExpirationTime));
+
+        await this.prisma.refreshSession.update({
+            where: { id: session.id },
+            data: {
+                refreshHash: this.hashingService.hashToken(newRefreshToken),
+                expiresAt: newExpiry,
+            },
+        });
+
+        const { accessToken } = await this.tokenProvider.generateJwt(user as User);
+        return { accessToken, refreshToken: newRefreshToken };
+    }
+
+    private async createRefreshSession(userId: string, refreshToken: string) {
+        const refreshHash = this.hashingService.hashToken(refreshToken);
+        const ttl = Number(this.jwtConfig.refreshTokenExpirationTime);
+        if (isNaN(ttl)) throw new Error("Refresh TTL must be milliseconds");
+        const session = await this.prisma.refreshSession.create({
+            data: {
+                userId,
+                refreshHash,
+                expiresAt: new Date(Date.now() + ttl),
+            },
+        });
+        return session;
     }
 }
