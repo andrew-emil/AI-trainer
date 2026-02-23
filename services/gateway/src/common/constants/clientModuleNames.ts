@@ -1,0 +1,3 @@
+export const AUTH_SERVICE = Symbol('AUTH_SERVICE');
+export const COACH_DOMAIN_SERVICE = Symbol('COACH_DOMAIN_SERVICE');
+export const INTERACTION_SERVICE = Symbol('INTERACTION_SERVICE');
