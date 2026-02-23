@@ -1,14 +1,45 @@
-import { Module } from '@nestjs/common';
+import { Module, ValidationPipe } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import Joi from 'joi';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { UserModule } from './user/user.module';
-import { TrainerModule } from './trainer/trainer.module';
-import { TraineeModule } from './trainee/trainee.module';
 import { AuthModule } from './auth/auth.module';
+import { RedisModule } from './common/redis/redis.module';
+import jwtConfig, { jwtSchema } from './config/jwt.config';
+import rabbitConfig, { rabbitSchema } from './config/rabbit.config';
+import { TraineeModule } from './trainee/trainee.module';
+import { TrainerModule } from './trainer/trainer.module';
+import { UserModule } from './user/user.module';
+import { RpcToHttpExceptionFilter } from './common/filters/rpc-to-http-exception.filter';
+import { APP_FILTER, APP_PIPE } from '@nestjs/core';
 
 @Module({
-  imports: [UserModule, TrainerModule, TraineeModule, AuthModule],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+      validationSchema: Joi.object()
+        .concat(rabbitSchema)
+        .concat(jwtSchema),
+      load: [rabbitConfig, jwtConfig],
+    }),
+    UserModule, TrainerModule, TraineeModule, AuthModule, RedisModule
+  ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    { provide: APP_FILTER, useClass: RpcToHttpExceptionFilter },
+    {
+      provide: APP_PIPE,
+      useValue: new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+        transformOptions: {
+          enableImplicitConversion: true,
+        },
+      })
+    }
+  ],
 })
-export class AppModule {}
+export class AppModule { }
