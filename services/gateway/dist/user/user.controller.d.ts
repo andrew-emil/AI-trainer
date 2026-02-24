@@ -1,12 +1,10 @@
-import { UserService } from './user.service';
-import { CreateUserDto } from './dto/create-user.dto';
+import type { CustomRequest } from 'src/common/types/customRequest.type';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserService } from './user.service';
 export declare class UserController {
     private readonly userService;
     constructor(userService: UserService);
-    create(createUserDto: CreateUserDto): string;
-    findAll(): string;
-    findOne(id: string): string;
-    update(id: string, updateUserDto: UpdateUserDto): string;
-    remove(id: string): string;
+    getMyProfile(req: CustomRequest): Promise<import("../common/contracts/user").UserResponse>;
+    update(req: CustomRequest, updateUserDto: UpdateUserDto): Promise<import("../common/contracts/user").UserResponse>;
+    remove(req: CustomRequest): boolean;
 }

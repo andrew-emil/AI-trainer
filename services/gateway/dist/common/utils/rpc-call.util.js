@@ -5,12 +5,14 @@ const common_1 = require("@nestjs/common");
 const rxjs_1 = require("rxjs");
 async function rpcCall(client, pattern, payload, schema) {
     try {
+        await client.connect();
         console.log('About to send message');
-        const response = await (0, rxjs_1.firstValueFrom)(client.send(pattern, payload));
-        console.log('Response received');
+        const response = await (0, rxjs_1.lastValueFrom)(client.send(pattern, payload));
+        console.log('Response received', response);
         return schema.validate(response).value;
     }
     catch (err) {
+        console.log(err);
         if (err instanceof common_1.HttpException) {
             throw err;
         }
@@ -19,9 +21,6 @@ async function rpcCall(client, pattern, payload, schema) {
         }
         if (err?.status) {
             throw new common_1.HttpException(err.message || 'Error', err.status);
-        }
-        if (err?.name === 'ZodError') {
-            throw new common_1.BadGatewayException(`Invalid response from microservice for pattern ${pattern}`);
         }
         throw new common_1.InternalServerErrorException(`Microservice call failed for pattern ${pattern}`);
     }

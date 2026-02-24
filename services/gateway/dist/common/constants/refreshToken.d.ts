@@ -1,1 +1,1 @@
-export declare const RefreshToken: string;
+export declare const RefreshToken: unique symbol;

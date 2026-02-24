@@ -1,11 +1,10 @@
 import {
-    BadGatewayException,
     HttpException,
-    InternalServerErrorException,
+    InternalServerErrorException
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import Joi from 'joi';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, lastValueFrom } from 'rxjs';
 
 export async function rpcCall<T>(
     client: ClientProxy,
@@ -14,13 +13,14 @@ export async function rpcCall<T>(
     schema: Joi.ObjectSchema<any>,
 ): Promise<T> {
     try {
+        await client.connect()
         console.log('About to send message');
-        const response = await firstValueFrom(client.send(pattern, payload));
-        console.log('Response received');
-        return schema.validate(response).value as T;
+        const response = await lastValueFrom(client.send<T>(pattern, payload));
+        console.log('Response received', response);
+        return schema.validate(response).value;
 
     } catch (err: any) {
-
+        console.log(err)
         // Preserve existing HttpExceptions
         if (err instanceof HttpException) {
             throw err;
@@ -36,13 +36,6 @@ export async function rpcCall<T>(
             throw new HttpException(
                 err.message || 'Error',
                 err.status,
-            );
-        }
-
-        // Schema validation failure
-        if (err?.name === 'ZodError') {
-            throw new BadGatewayException(
-                `Invalid response from microservice for pattern ${pattern}`,
             );
         }
 

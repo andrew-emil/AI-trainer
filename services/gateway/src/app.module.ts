@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { RpcToHttpExceptionFilter } from './common/filters/rpc-to-http-exception.filter';
 import jwtConfig, { jwtSchema } from './config/jwt.config';
 import rabbitConfig, { rabbitSchema } from './config/rabbit.config';
+import { RabbitMQClientModule } from './rabbitmq-client/rabbitmq-client.module';
 import { TraineeModule } from './trainee/trainee.module';
 import { TrainerModule } from './trainer/trainer.module';
 import { UserModule } from './user/user.module';
@@ -22,7 +23,7 @@ import { UserModule } from './user/user.module';
         .concat(jwtSchema),
       load: [rabbitConfig, jwtConfig],
     }),
-    UserModule, TrainerModule, TraineeModule, AuthModule
+    UserModule, TrainerModule, TraineeModule, AuthModule, RabbitMQClientModule
   ],
   controllers: [AppController],
   providers: [

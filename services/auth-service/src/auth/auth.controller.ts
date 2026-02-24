@@ -7,7 +7,7 @@ import { RegisterAsTraineeDto } from './dto/registerAsTrainee.dto';
 import { RegisterAsTrainerDto } from './dto/registerAsTrainer.dto';
 import { ResetPasswordDto } from './dto/resetPassword.dto';
 
-@Controller('auth')
+@Controller()
 export class AuthController {
   constructor(private readonly authService: AuthService) { }
 
@@ -18,7 +18,6 @@ export class AuthController {
 
   @MessagePattern(AuthPatterns.registerAsTrainee)
   registerAsTrainee(@Payload() registerAsTraineeDto: RegisterAsTraineeDto) {
-    console.log(typeof registerAsTraineeDto, registerAsTraineeDto);
     return this.authService.registerAsTrainee(registerAsTraineeDto);
   }
 
@@ -28,7 +27,7 @@ export class AuthController {
   }
 
   @EventPattern(AuthPatterns.forgetPassword)
-  forgetPassword(@Payload() email: string) {
+  forgetPassword(@Payload() { email }: { email: string }) {
     return this.authService.forgetPassword(email);
   }
 
