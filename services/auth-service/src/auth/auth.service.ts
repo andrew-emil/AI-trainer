@@ -88,31 +88,37 @@ export class AuthService {
 
     async forgetPassword(email: string) {
         const user = await this.userService.findByEmail(email);
-        if (!user) throw new RpcException({
-            status: 404,
-            message: "User not found",
-        });
+        if (!user) return {
+            message: "Reset link sent successfully",
+        };
 
         const resetToken = this.tokenProvider.generateRandomToken(32);
         const resetTokenHash = this.hashingService.hashToken(resetToken);
         const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
 
-        await this.prisma.resetPasswordToken.create({
-            data: {
-                userId: user.id,
-                tokenHash: resetTokenHash,
-                expiresAt: resetTokenExpiry,
-            },
-        });
+        try {
+            await this.prisma.resetPasswordToken.create({
+                data: {
+                    userId: user.id,
+                    tokenHash: resetTokenHash,
+                    expiresAt: resetTokenExpiry,
+                },
+            });
 
-        const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${encodeURIComponent(resetToken)}`;
-
-        this.rabbitProducerService.emitPatternToInteractionDomain(EmailPatterns.sendEmail, {
-            to: email,
-            resetLink,
-            userName: user.username,
-            expirationTime: "1 hour",
-        });
+            const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${encodeURIComponent(resetToken)}`;
+            this.rabbitProducerService.emitPatternToInteractionDomain(EmailPatterns.sendEmail, {
+                to: email,
+                resetLink,
+                userName: user.username,
+                expirationTime: "1 hour",
+            });
+        } catch (error) {
+            console.log(error)
+        } finally {
+            return {
+                message: "Reset link sent successfully",
+            };
+        }
     }
 
     async resetPassword(password: string, token: string) {
@@ -171,7 +177,11 @@ export class AuthService {
             });
         });
 
-        return { message: "Password reset successfully" };
+        const { accessToken } = await this.tokenProvider.generateJwt(resetRow.user as User);
+        const refreshToken = this.tokenProvider.generateRandomToken();
+        await this.createRefreshSession(resetRow.userId, refreshToken);
+
+        return { accessToken, refreshToken };
     }
 
     async registerAsTrainee(data: RegisterAsTraineeDto) {

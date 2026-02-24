@@ -54,6 +54,25 @@ services:
       timeout: 5s
       retries: 5
 
+  # ------------------Gateway-----------------
+  gateway:
+    container_name: gateway
+    build:
+      context: ./services/gateway
+    env_file:
+      - ./services/gateway/.env
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    volumes:
+      - ./services/gateway:/app
+      - /app/node_modules
+    networks:
+      - trainer_net
+
   # ----------------- NestJS Auth Service -----------------
   auth-service:
     container_name: auth-service

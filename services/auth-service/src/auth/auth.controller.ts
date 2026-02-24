@@ -18,6 +18,7 @@ export class AuthController {
 
   @MessagePattern(AuthPatterns.registerAsTrainee)
   registerAsTrainee(@Payload() registerAsTraineeDto: RegisterAsTraineeDto) {
+    console.log(typeof registerAsTraineeDto, registerAsTraineeDto);
     return this.authService.registerAsTrainee(registerAsTraineeDto);
   }
 
@@ -42,7 +43,7 @@ export class AuthController {
   }
 
   @MessagePattern(AuthPatterns.logout)
-  logout(@Payload() userId: string) {
+  logout(@Payload() { userId }: { userId: string }) {
     return this.authService.logout(userId);
   }
 }
