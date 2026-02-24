@@ -5,4 +5,5 @@ export enum AuthPatterns {
     forgetPassword = "auth.forgetPassword",
     resetPassword = "auth.resetPassword",
     refresh = "auth.refresh",
+    logout = "auth.logout",
 }

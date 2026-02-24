@@ -1,17 +1,16 @@
 import { Module, ValidationPipe } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_FILTER, APP_PIPE } from '@nestjs/core';
 import Joi from 'joi';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
-import { RedisModule } from './common/redis/redis.module';
+import { RpcToHttpExceptionFilter } from './common/filters/rpc-to-http-exception.filter';
 import jwtConfig, { jwtSchema } from './config/jwt.config';
 import rabbitConfig, { rabbitSchema } from './config/rabbit.config';
 import { TraineeModule } from './trainee/trainee.module';
 import { TrainerModule } from './trainer/trainer.module';
 import { UserModule } from './user/user.module';
-import { RpcToHttpExceptionFilter } from './common/filters/rpc-to-http-exception.filter';
-import { APP_FILTER, APP_PIPE } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -23,7 +22,7 @@ import { APP_FILTER, APP_PIPE } from '@nestjs/core';
         .concat(jwtSchema),
       load: [rabbitConfig, jwtConfig],
     }),
-    UserModule, TrainerModule, TraineeModule, AuthModule, RedisModule
+    UserModule, TrainerModule, TraineeModule, AuthModule
   ],
   controllers: [AppController],
   providers: [

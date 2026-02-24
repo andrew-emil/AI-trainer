@@ -1,10 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { RpcException } from '@nestjs/microservices';
 import { CloudinaryProvider } from 'src/common/providers/cloudinary.provider';
 import { TrainerConversionUtil } from 'src/common/utils/trainer-conversion.util';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateTrainerDto } from './dto/create-trainer.dto';
-import { UpdateTrainerDto } from './dto/update-trainer.dto';
 import { CreatedTrainer } from './dto/createdTrainer.dto';
+import { UpdateTrainerDto } from './dto/update-trainer.dto';
 
 @Injectable()
 export class TrainerService {
@@ -63,7 +64,12 @@ export class TrainerService {
     }
 
     async findOne(id: string) {
-        return this.prisma.trainer.findUnique({ where: { userId: id } });
+        const trainer = await this.prisma.trainer.findUnique({ where: { userId: id } });
+        if (!trainer) throw new RpcException({
+            status: 404,
+            message: "Trainer not found",
+        });
+        return trainer;
     }
 
     async update(id: string, dto: UpdateTrainerDto) {
@@ -85,7 +91,10 @@ export class TrainerService {
                 transformations: { select: { imagePublicId: true } },
             },
         });
-        if (!old) throw new NotFoundException("Trainer not found");
+        if (!old) throw new RpcException({
+            status: 404,
+            message: "Trainer not found",
+        });
 
         const oldCertIds = old.certifications
             .map((x) => x.imagePublicId)
@@ -172,8 +181,6 @@ export class TrainerService {
     }
 
     async delete(id: string) {
-        await new Promise((resolve) => process.nextTick(resolve));
-        // Ensure trainer exists + collect public_ids before DB deletion
         const trainer = await this.prisma.trainer.findUnique({
             where: { userId: id },
             include: {
@@ -183,7 +190,10 @@ export class TrainerService {
             },
         });
 
-        if (!trainer) throw new NotFoundException("Trainer not found");
+        if (!trainer) throw new RpcException({
+            status: 404,
+            message: "Trainer not found",
+        });
 
         const certIds = trainer.certifications
             .map((x) => x.imagePublicId)

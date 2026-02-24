@@ -1,4 +1,5 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { RpcException } from '@nestjs/microservices';
 import { HashingService } from 'src/common/hashing/hashing.service';
 import { CloudinaryProvider } from 'src/common/providers/cloudinary.provider';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -63,7 +64,10 @@ export class UserService {
                 avatarPublicId: true,
             },
         });
-        if (!user) throw new NotFoundException("User not found");
+        if (!user) throw new RpcException({
+            status: 404,
+            message: "User not found",
+        });
         return user;
     }
 
@@ -83,9 +87,10 @@ export class UserService {
             const hasPid = !!dto.avatarPublicId;
 
             if ((hasUrl && !hasPid) || (!hasUrl && hasPid)) {
-                throw new BadRequestException(
-                    "avatar and avatarPublicId must be provided together.",
-                );
+                throw new RpcException({
+                    status: 400,
+                    message: "avatar and avatarPublicId must be provided together.",
+                });
             }
         }
 

@@ -1,10 +1,11 @@
-import { Inject, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import type { ConfigType } from '@nestjs/config';
+import { RpcException } from '@nestjs/microservices';
+import { User, UserRole } from '@prisma/client';
 import { EmailPatterns } from 'src/common/enums/emailPatterns.enum';
 import { NotificationPatterns } from 'src/common/enums/traineePatterns.enum';
 import { HashingService } from 'src/common/hashing/hashing.service';
 import jwtConfiguration from 'src/config/jwt.config';
-import { User, UserRole } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RabbitProducerService } from 'src/rabbit-producer/rabbit-producer.service';
 import { TraineeService } from 'src/user/trainee/trainee.service';
@@ -32,14 +33,20 @@ export class AuthService {
     async validateUser(email: string, password: string) {
         const user = await this.userService.findByEmail(email);
         if (!user)
-            throw new UnauthorizedException("Invalid email or password");
+            throw new RpcException({
+                status: 401,
+                message: "Invalid email or password",
+            });
 
         const isPasswordValid = await this.hashingService.comparePassword(
             password,
             user.passwordHash,
         );
         if (!isPasswordValid)
-            throw new UnauthorizedException("Invalid email or password");
+            throw new RpcException({
+                status: 401,
+                message: "Invalid email or password",
+            });
 
         return user;
     }
@@ -49,16 +56,28 @@ export class AuthService {
 
         if (user.role == "trainer") {
             const trainer = await this.trainerService.findOne(user.id);
-            if (!trainer) throw new UnauthorizedException("Trainer not found");
+            if (!trainer) throw new RpcException({
+                status: 404,
+                message: "Trainer not found",
+            });
             if (!trainer.isActive)
-                throw new UnauthorizedException("Trainer is not active");
+                throw new RpcException({
+                    status: 401,
+                    message: "Trainer is not active",
+                });
         }
 
         if (user.role == "trainee") {
             const trainee = await this.traineeService.findOne(user.id);
-            if (!trainee) throw new UnauthorizedException("Trainee not found");
+            if (!trainee) throw new RpcException({
+                status: 404,
+                message: "Trainer not found",
+            });
             if (!trainee.isActive)
-                throw new UnauthorizedException("Trainee is not active");
+                throw new RpcException({
+                    status: 401,
+                    message: "Trainer is not active",
+                });
         }
 
         const { accessToken } = await this.tokenProvider.generateJwt(user);
@@ -69,7 +88,10 @@ export class AuthService {
 
     async forgetPassword(email: string) {
         const user = await this.userService.findByEmail(email);
-        if (!user) throw new UnauthorizedException("User not found");
+        if (!user) throw new RpcException({
+            status: 404,
+            message: "User not found",
+        });
 
         const resetToken = this.tokenProvider.generateRandomToken(32);
         const resetTokenHash = this.hashingService.hashToken(resetToken);
@@ -108,7 +130,10 @@ export class AuthService {
         });
 
         if (!resetRow) {
-            throw new UnauthorizedException("Invalid or expired reset token");
+            throw new RpcException({
+                status: 401,
+                message: "Invalid or expired reset token",
+            });
         }
 
         const newPasswordHash = await this.hashingService.hashPassword(password);
@@ -125,7 +150,10 @@ export class AuthService {
             });
 
             if (markUsed.count !== 1) {
-                throw new UnauthorizedException("Reset token already used or expired");
+                throw new RpcException({
+                    status: 401,
+                    message: "Reset token already used or expired",
+                });
             }
 
             // update password
@@ -165,7 +193,10 @@ export class AuthService {
 
             if (!trainee) {
                 await this.userService.delete(user.id);
-                throw new InternalServerErrorException("Trainee not created");
+                throw new RpcException({
+                    status: 500,
+                    message: "Trainee not created",
+                });
             }
         } catch (err) {
             console.log(err);
@@ -260,7 +291,10 @@ export class AuthService {
         });
 
         if (!session || session.expiresAt <= now) {
-            throw new UnauthorizedException('Invalid or expired refresh token');
+            throw new RpcException({
+                status: 401,
+                message: "Invalid or expired refresh token",
+            });
         }
 
         const user = session.user;
@@ -279,10 +313,22 @@ export class AuthService {
         return { accessToken, refreshToken: newRefreshToken };
     }
 
+    async logout(userId: string) {
+        await this.prisma.refreshSession.deleteMany({
+            where: { userId },
+        });
+        return { message: "Logged out successfully" };
+    }
+
     private async createRefreshSession(userId: string, refreshToken: string) {
         const refreshHash = this.hashingService.hashToken(refreshToken);
         const ttl = Number(this.jwtConfig.refreshTokenExpirationTime);
-        if (isNaN(ttl)) throw new Error("Refresh TTL must be milliseconds");
+        if (isNaN(ttl)) {
+            throw new RpcException({
+                status: 500,
+                message: "Refresh TTL must be milliseconds",
+            });
+        }
         const session = await this.prisma.refreshSession.create({
             data: {
                 userId,
