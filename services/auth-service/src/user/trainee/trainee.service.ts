@@ -1,8 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { RpcException } from '@nestjs/microservices';
 import { RegisterAsTraineeDto } from 'src/auth/dto/registerAsTrainee.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { UpdateTraineeDto } from './dto/updateTrainee.dto';
 import { UserService } from '../user.service';
+import { UpdateTraineeDto } from './dto/updateTrainee.dto';
 
 @Injectable()
 export class TraineeService {
@@ -11,8 +12,8 @@ export class TraineeService {
         private readonly userService: UserService,
     ) { }
 
-    async createTrainee(userId: string, traineeData: RegisterAsTraineeDto) {
-        const trainee = await this.prisma.trainee.create({
+    createTrainee(userId: string, traineeData: RegisterAsTraineeDto) {
+        return this.prisma.trainee.create({
             data: {
                 userId,
                 ...traineeData,
@@ -21,7 +22,6 @@ export class TraineeService {
                 user: true,
             },
         });
-        return trainee;
     }
 
     findAll() {
@@ -33,7 +33,10 @@ export class TraineeService {
             where: { userId: id },
             include: { user: true },
         });
-        if (!trainee) throw new NotFoundException("Trainee not found");
+        if (!trainee) throw new RpcException({
+            status: 404,
+            message: "Trainee not found",
+        });
         return trainee;
     }
 

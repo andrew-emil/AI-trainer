@@ -41,4 +41,8 @@ export class AuthController {
     return this.authService.refresh(refreshToken);
   }
 
+  @MessagePattern(AuthPatterns.logout)
+  logout(@Payload() userId: string) {
+    return this.authService.logout(userId);
+  }
 }
