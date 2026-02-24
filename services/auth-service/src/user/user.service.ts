@@ -138,21 +138,13 @@ export class UserService {
     }
 
     async delete(id: string) {
-        const user = await this.findOne(id); // throws if not found
+        const user = await this.findOne(id);
         const avatarId = user.avatarPublicId;
 
         if (avatarId) await this.cloudinaryProvider.deleteImage(avatarId);
 
         await this.prisma.user.delete({
             where: { id },
-            select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                username: true,
-                email: true,
-                role: true,
-            },
         });
     }
 

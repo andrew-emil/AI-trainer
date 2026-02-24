@@ -53,6 +53,7 @@ const auth_module_1 = require("./auth/auth.module");
 const rpc_to_http_exception_filter_1 = require("./common/filters/rpc-to-http-exception.filter");
 const jwt_config_1 = __importStar(require("./config/jwt.config"));
 const rabbit_config_1 = __importStar(require("./config/rabbit.config"));
+const rabbitmq_client_module_1 = require("./rabbitmq-client/rabbitmq-client.module");
 const trainee_module_1 = require("./trainee/trainee.module");
 const trainer_module_1 = require("./trainer/trainer.module");
 const user_module_1 = require("./user/user.module");
@@ -70,7 +71,7 @@ exports.AppModule = AppModule = __decorate([
                     .concat(jwt_config_1.jwtSchema),
                 load: [rabbit_config_1.default, jwt_config_1.default],
             }),
-            user_module_1.UserModule, trainer_module_1.TrainerModule, trainee_module_1.TraineeModule, auth_module_1.AuthModule
+            user_module_1.UserModule, trainer_module_1.TrainerModule, trainee_module_1.TraineeModule, auth_module_1.AuthModule, rabbitmq_client_module_1.RabbitMQClientModule
         ],
         controllers: [app_controller_1.AppController],
         providers: [

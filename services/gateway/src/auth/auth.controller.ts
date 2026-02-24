@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { cookieOptions } from 'src/common/constants/cookieOption';
 import type { CustomRequest } from 'src/common/types/customRequest.type';
@@ -9,16 +9,17 @@ import { RegisterAsTraineeDto } from './dto/registerAsTrainee.dto';
 import { RegisterAsTrainerDto } from './dto/registerAsTrainer.dto';
 import { ResetPasswordDto } from './dto/resetPassword.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { RefreshToken } from 'src/common/constants/refreshToken';
 
 @Controller('auth')
 export class AuthController {
+    private readonly refreshTokenName = "refreshToken";
+
     constructor(private readonly authService: AuthService) { }
 
     @Post('login')
     async login(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: Response) {
         const { accessToken, refreshToken } = await this.authService.login(loginDto);
-        res.cookie(RefreshToken, refreshToken, cookieOptions);
+        res.cookie(this.refreshTokenName, refreshToken, cookieOptions);
         return { accessToken };
     }
 
@@ -32,7 +33,7 @@ export class AuthController {
         const { accessToken, refreshToken: newRefreshToken } =
             await this.authService.refresh(refreshToken);
         if (newRefreshToken) {
-            res.cookie(RefreshToken, newRefreshToken, cookieOptions);
+            res.cookie(this.refreshTokenName, newRefreshToken, cookieOptions);
         }
 
         return { accessToken };
@@ -41,7 +42,7 @@ export class AuthController {
     @Post('register-as-trainee')
     async registerAsTrainee(@Body() registerDto: RegisterAsTraineeDto, @Res({ passthrough: true }) res: Response) {
         const { accessToken, refreshToken } = await this.authService.registerAsTrainee(registerDto);
-        res.cookie(RefreshToken, refreshToken, cookieOptions);
+        res.cookie(this.refreshTokenName, refreshToken, cookieOptions);
         return { accessToken };
     }
 
@@ -51,6 +52,7 @@ export class AuthController {
     }
 
     @Post('forget-password')
+    @HttpCode(HttpStatus.OK)
     forgetPassword(@Body() { email }: ForgetPasswordDto) {
         return this.authService.forgetPassword(email);
     }
@@ -62,8 +64,9 @@ export class AuthController {
 
     @UseGuards(JwtAuthGuard)
     @Post('logout')
+    @HttpCode(HttpStatus.OK)
     logout(@Req() req: CustomRequest, @Res({ passthrough: true }) res: Response) {
-        res.clearCookie(RefreshToken, cookieOptions);
+        res.clearCookie(this.refreshTokenName, cookieOptions);
         return this.authService.logout(req.user.sub);
     }
 }

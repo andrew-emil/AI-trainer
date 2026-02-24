@@ -8,6 +8,7 @@ import { RegisterAsTrainerDto } from './dto/registerAsTrainer.dto';
 import { ResetPasswordDto } from './dto/resetPassword.dto';
 export declare class AuthController {
     private readonly authService;
+    private readonly refreshTokenName;
     constructor(authService: AuthService);
     login(loginDto: LoginDto, res: Response): Promise<{
         accessToken: string;

@@ -22,15 +22,15 @@ const registerAsTrainee_dto_1 = require("./dto/registerAsTrainee.dto");
 const registerAsTrainer_dto_1 = require("./dto/registerAsTrainer.dto");
 const resetPassword_dto_1 = require("./dto/resetPassword.dto");
 const jwt_auth_guard_1 = require("./guards/jwt-auth.guard");
-const refreshToken_1 = require("../common/constants/refreshToken");
 let AuthController = class AuthController {
     authService;
+    refreshTokenName = "refreshToken";
     constructor(authService) {
         this.authService = authService;
     }
     async login(loginDto, res) {
         const { accessToken, refreshToken } = await this.authService.login(loginDto);
-        res.cookie(refreshToken_1.RefreshToken, refreshToken, cookieOption_1.cookieOptions);
+        res.cookie(this.refreshTokenName, refreshToken, cookieOption_1.cookieOptions);
         return { accessToken };
     }
     async refresh(req, res) {
@@ -40,13 +40,13 @@ let AuthController = class AuthController {
         }
         const { accessToken, refreshToken: newRefreshToken } = await this.authService.refresh(refreshToken);
         if (newRefreshToken) {
-            res.cookie(refreshToken_1.RefreshToken, newRefreshToken, cookieOption_1.cookieOptions);
+            res.cookie(this.refreshTokenName, newRefreshToken, cookieOption_1.cookieOptions);
         }
         return { accessToken };
     }
     async registerAsTrainee(registerDto, res) {
         const { accessToken, refreshToken } = await this.authService.registerAsTrainee(registerDto);
-        res.cookie(refreshToken_1.RefreshToken, refreshToken, cookieOption_1.cookieOptions);
+        res.cookie(this.refreshTokenName, refreshToken, cookieOption_1.cookieOptions);
         return { accessToken };
     }
     async registerAsTrainer(registerDto) {
@@ -59,7 +59,7 @@ let AuthController = class AuthController {
         return this.authService.resetPassword(resetPasswordDto);
     }
     logout(req, res) {
-        res.clearCookie(refreshToken_1.RefreshToken, cookieOption_1.cookieOptions);
+        res.clearCookie(this.refreshTokenName, cookieOption_1.cookieOptions);
         return this.authService.logout(req.user.sub);
     }
 };
@@ -97,6 +97,7 @@ __decorate([
 ], AuthController.prototype, "registerAsTrainer", null);
 __decorate([
     (0, common_1.Post)('forget-password'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [forgetPassword_dto_1.ForgetPasswordDto]),
@@ -112,6 +113,7 @@ __decorate([
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Post)('logout'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Res)({ passthrough: true })),
     __metadata("design:type", Function),

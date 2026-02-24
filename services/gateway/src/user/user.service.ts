@@ -1,26 +1,38 @@
-import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
+import { Inject, Injectable } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
+import { AUTH_SERVICE } from 'src/common/constants/clientModuleNames';
+import { UserResponse, UserResponseSchema } from 'src/common/contracts/user';
+import { UserPattern } from 'src/common/enums/userPatterns.enum';
+import { rpcCall } from 'src/common/utils/rpc-call.util';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UserService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  constructor(
+    @Inject(AUTH_SERVICE)
+    private readonly authService: ClientProxy,
+  ) { }
+
+  findOne(userId: string) {
+    return rpcCall<UserResponse>(
+      this.authService,
+      UserPattern.GET_ME,
+      { userId },
+      UserResponseSchema
+    );
   }
 
-  findAll() {
-    return `This action returns all user`;
+  update(userId: string, updateUserDto: UpdateUserDto) {
+    return rpcCall<UserResponse>(
+      this.authService,
+      UserPattern.UPDATE,
+      { userId, ...updateUserDto },
+      UserResponseSchema
+    );
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
-  }
-
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  remove(userId: string) {
+    this.authService.emit(UserPattern.DELETE, { userId });
+    return true;
   }
 }

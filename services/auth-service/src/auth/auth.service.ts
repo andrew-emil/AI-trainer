@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import type { ConfigType } from '@nestjs/config';
 import { RpcException } from '@nestjs/microservices';
 import { User, UserRole } from '@prisma/client';
+import ms from 'ms';
 import { EmailPatterns } from 'src/common/enums/emailPatterns.enum';
 import { NotificationPatterns } from 'src/common/enums/traineePatterns.enum';
 import { HashingService } from 'src/common/hashing/hashing.service';
@@ -309,7 +310,7 @@ export class AuthService {
 
         const user = session.user;
         const newRefreshToken = this.tokenProvider.generateRandomToken();
-        const newExpiry = new Date(Date.now() + Number(this.jwtConfig.refreshTokenExpirationTime));
+        const newExpiry = new Date(Date.now() + ms(this.jwtConfig.refreshTokenExpirationTime as unknown as any));
 
         await this.prisma.refreshSession.update({
             where: { id: session.id },
@@ -330,22 +331,37 @@ export class AuthService {
         return { message: "Logged out successfully" };
     }
 
-    private async createRefreshSession(userId: string, refreshToken: string) {
+    private async createRefreshSession(
+        userId: string,
+        refreshToken: string,
+    ) {
         const refreshHash = this.hashingService.hashToken(refreshToken);
-        const ttl = Number(this.jwtConfig.refreshTokenExpirationTime);
-        if (isNaN(ttl)) {
+
+        const expiration = this.jwtConfig.refreshTokenExpirationTime;
+        if (!expiration) {
             throw new RpcException({
                 status: 500,
-                message: "Refresh TTL must be milliseconds",
+                message: 'Refresh token expiration is not configured',
             });
         }
-        const session = await this.prisma.refreshSession.create({
+
+        const ttl = ms(expiration as unknown as any);
+
+        if (typeof ttl !== 'number') {
+            throw new RpcException({
+                status: 500,
+                message: 'Invalid refresh token expiration format (e.g. "60d", "7d", "12h")',
+            });
+        }
+
+        const expiresAt = new Date(Date.now() + ttl);
+
+        return this.prisma.refreshSession.create({
             data: {
                 userId,
                 refreshHash,
-                expiresAt: new Date(Date.now() + ttl),
+                expiresAt,
             },
         });
-        return session;
     }
 }

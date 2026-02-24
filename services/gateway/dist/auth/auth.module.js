@@ -8,10 +8,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthModule = void 0;
 const common_1 = require("@nestjs/common");
-const config_1 = require("@nestjs/config");
-const jwt_1 = require("@nestjs/jwt");
-const microservices_1 = require("@nestjs/microservices");
 const clientModuleNames_1 = require("../common/constants/clientModuleNames");
+const rabbitmq_client_module_1 = require("../rabbitmq-client/rabbitmq-client.module");
 const auth_controller_1 = require("./auth.controller");
 const auth_service_1 = require("./auth.service");
 const jwt_strategy_1 = require("./strategies/jwt.strategy");
@@ -26,31 +24,7 @@ exports.AuthModule = AuthModule = __decorate([
             jwt_strategy_1.JwtStrategy,
         ],
         imports: [
-            microservices_1.ClientsModule.registerAsync([
-                {
-                    name: clientModuleNames_1.AUTH_SERVICE,
-                    imports: [config_1.ConfigModule],
-                    useFactory: async (configService) => ({
-                        transport: microservices_1.Transport.RMQ,
-                        urls: [configService.get('rabbit.url')],
-                        queue: configService.get('rabbit.authQueue'),
-                        queueOptions: {
-                            durable: false,
-                        },
-                    }),
-                    inject: [config_1.ConfigService],
-                },
-            ]),
-            jwt_1.JwtModule.registerAsync({
-                imports: [config_1.ConfigModule],
-                useFactory: async (configService) => ({
-                    secret: configService.get('jwt.secret'),
-                    signOptions: {
-                        expiresIn: configService.get('jwt.expirationTime')
-                    },
-                }),
-                inject: [config_1.ConfigService],
-            }),
+            rabbitmq_client_module_1.RabbitMQClientModule.register('rabbit.authQueue', clientModuleNames_1.AUTH_SERVICE.toString()),
         ]
     })
 ], AuthModule);

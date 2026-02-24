@@ -1,9 +1,10 @@
-import { CreateUserDto } from './dto/create-user.dto';
+import { ClientProxy } from '@nestjs/microservices';
+import { UserResponse } from 'src/common/contracts/user';
 import { UpdateUserDto } from './dto/update-user.dto';
 export declare class UserService {
-    create(createUserDto: CreateUserDto): string;
-    findAll(): string;
-    findOne(id: number): string;
-    update(id: number, updateUserDto: UpdateUserDto): string;
-    remove(id: number): string;
+    private readonly authService;
+    constructor(authService: ClientProxy);
+    findOne(userId: string): Promise<UserResponse>;
+    update(userId: string, updateUserDto: UpdateUserDto): Promise<UserResponse>;
+    remove(userId: string): boolean;
 }
