@@ -45,15 +45,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
+const core_1 = require("@nestjs/core");
+const joi_1 = __importDefault(require("joi"));
 const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
 const auth_module_1 = require("./auth/auth.module");
+const rpc_to_http_exception_filter_1 = require("./common/filters/rpc-to-http-exception.filter");
+const jwt_config_1 = __importStar(require("./config/jwt.config"));
 const rabbit_config_1 = __importStar(require("./config/rabbit.config"));
 const trainee_module_1 = require("./trainee/trainee.module");
 const trainer_module_1 = require("./trainer/trainer.module");
 const user_module_1 = require("./user/user.module");
-const redis_module_1 = require("./common/redis/redis.module");
-const joi_1 = __importDefault(require("joi"));
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -64,13 +66,28 @@ exports.AppModule = AppModule = __decorate([
                 isGlobal: true,
                 envFilePath: '.env',
                 validationSchema: joi_1.default.object()
-                    .concat(rabbit_config_1.rabbitSchema),
-                load: [rabbit_config_1.default],
+                    .concat(rabbit_config_1.rabbitSchema)
+                    .concat(jwt_config_1.jwtSchema),
+                load: [rabbit_config_1.default, jwt_config_1.default],
             }),
-            user_module_1.UserModule, trainer_module_1.TrainerModule, trainee_module_1.TraineeModule, auth_module_1.AuthModule, redis_module_1.RedisModule
+            user_module_1.UserModule, trainer_module_1.TrainerModule, trainee_module_1.TraineeModule, auth_module_1.AuthModule
         ],
         controllers: [app_controller_1.AppController],
-        providers: [app_service_1.AppService],
+        providers: [
+            app_service_1.AppService,
+            { provide: core_1.APP_FILTER, useClass: rpc_to_http_exception_filter_1.RpcToHttpExceptionFilter },
+            {
+                provide: core_1.APP_PIPE,
+                useValue: new common_1.ValidationPipe({
+                    whitelist: true,
+                    forbidNonWhitelisted: true,
+                    transform: true,
+                    transformOptions: {
+                        enableImplicitConversion: true,
+                    },
+                })
+            }
+        ],
     })
 ], AppModule);
 //# sourceMappingURL=app.module.js.map

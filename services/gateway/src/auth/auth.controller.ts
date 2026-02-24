@@ -1,8 +1,15 @@
-import { Body, Controller, Post, Req, Res, UnauthorizedException } from '@nestjs/common';
-import type { Response, Request } from 'express';
+import { Body, Controller, Post, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
+import type { Request, Response } from 'express';
 import { cookieOptions } from 'src/common/constants/cookieOption';
+import type { CustomRequest } from 'src/common/types/customRequest.type';
 import { AuthService } from './auth.service';
+import { ForgetPasswordDto } from './dto/forgetPassword.dto';
 import { LoginDto } from './dto/login.dto';
+import { RegisterAsTraineeDto } from './dto/registerAsTrainee.dto';
+import { RegisterAsTrainerDto } from './dto/registerAsTrainer.dto';
+import { ResetPasswordDto } from './dto/resetPassword.dto';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { RefreshToken } from 'src/common/constants/refreshToken';
 
 @Controller('auth')
 export class AuthController {
@@ -11,7 +18,7 @@ export class AuthController {
     @Post('login')
     async login(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: Response) {
         const { accessToken, refreshToken } = await this.authService.login(loginDto);
-        res.cookie('refreshToken', refreshToken, cookieOptions);
+        res.cookie(RefreshToken, refreshToken, cookieOptions);
         return { accessToken };
     }
 
@@ -25,9 +32,38 @@ export class AuthController {
         const { accessToken, refreshToken: newRefreshToken } =
             await this.authService.refresh(refreshToken);
         if (newRefreshToken) {
-            res.cookie('refreshToken', newRefreshToken, cookieOptions);
+            res.cookie(RefreshToken, newRefreshToken, cookieOptions);
         }
 
         return { accessToken };
+    }
+
+    @Post('register-as-trainee')
+    async registerAsTrainee(@Body() registerDto: RegisterAsTraineeDto, @Res({ passthrough: true }) res: Response) {
+        const { accessToken, refreshToken } = await this.authService.registerAsTrainee(registerDto);
+        res.cookie(RefreshToken, refreshToken, cookieOptions);
+        return { accessToken };
+    }
+
+    @Post('register-as-trainer')
+    async registerAsTrainer(@Body() registerDto: RegisterAsTrainerDto) {
+        return this.authService.registerAsTrainer(registerDto);
+    }
+
+    @Post('forget-password')
+    forgetPassword(@Body() { email }: ForgetPasswordDto) {
+        return this.authService.forgetPassword(email);
+    }
+
+    @Post('reset-password')
+    resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+        return this.authService.resetPassword(resetPasswordDto);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Post('logout')
+    logout(@Req() req: CustomRequest, @Res({ passthrough: true }) res: Response) {
+        res.clearCookie(RefreshToken, cookieOptions);
+        return this.authService.logout(req.user.sub);
     }
 }
