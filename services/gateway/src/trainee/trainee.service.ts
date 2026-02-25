@@ -1,26 +1,38 @@
-import { Injectable } from '@nestjs/common';
-import { CreateTraineeDto } from './dto/create-trainee.dto';
+import { Inject, Injectable } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
+import { AUTH_SERVICE } from 'src/common/constants/clientModuleNames';
 import { UpdateTraineeDto } from './dto/update-trainee.dto';
+import { firstValueFrom } from 'rxjs';
+import { TraineePatterns } from 'src/common/patterns/traineePatterns.enum';
 
 @Injectable()
 export class TraineeService {
-  create(createTraineeDto: CreateTraineeDto) {
-    return 'This action adds a new trainee';
-  }
+  constructor(
+    @Inject(AUTH_SERVICE)
+    private readonly client: ClientProxy,
+  ) {}
 
   findAll() {
-    return `This action returns all trainee`;
+    return firstValueFrom(
+      this.client.send(TraineePatterns.FIND_ALL, {})
+    );
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} trainee`;
+  findOne(id: string) {
+    return firstValueFrom(
+      this.client.send(TraineePatterns.FIND_ONE, { id })
+    );
   }
 
-  update(id: number, updateTraineeDto: UpdateTraineeDto) {
-    return `This action updates a #${id} trainee`;
+  update(id: string, updateTraineeDto: UpdateTraineeDto) {
+    return firstValueFrom(
+      this.client.send(TraineePatterns.UPDATE, { id, updateTraineeDto })
+    );
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} trainee`;
+  remove(id: string) {
+    return firstValueFrom(
+      this.client.send(TraineePatterns.DELETE, { id })
+    );
   }
 }

@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { AUTH_SERVICE } from 'src/common/constants/clientModuleNames';
 import { UserResponse, UserResponseSchema } from 'src/common/contracts/user';
-import { UserPattern } from 'src/common/enums/userPatterns.enum';
+import { UserPattern } from 'src/common/patterns/userPatterns.enum';
 import { rpcCall } from 'src/common/utils/rpc-call.util';
 import { UpdateUserDto } from './dto/update-user.dto';
 
@@ -29,10 +29,5 @@ export class UserService {
       { userId, ...updateUserDto },
       UserResponseSchema
     );
-  }
-
-  remove(userId: string) {
-    this.authService.emit(UserPattern.DELETE, { userId });
-    return true;
   }
 }

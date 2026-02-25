@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Patch, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Req, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import type { CustomRequest } from 'src/common/types/customRequest.type';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -17,11 +17,5 @@ export class UserController {
   @Patch()
   update(@Req() req: CustomRequest, @Body() updateUserDto: UpdateUserDto) {
     return this.userService.update(req.user.sub, updateUserDto);
-  }
-
-  @Delete()
-  @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Req() req: CustomRequest) {
-    return this.userService.remove(req.user.sub);
   }
 }

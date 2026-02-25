@@ -21,7 +21,6 @@ export class RpcToHttpExceptionFilter implements ExceptionFilter {
     // HTTP context
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
-    const request = ctx.getRequest?.();
 
     // If the exception is already an HttpException, reuse its information.
     if (exception instanceof HttpException) {

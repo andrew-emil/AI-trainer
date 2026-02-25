@@ -1,4 +1,4 @@
-import  Joi  from 'joi';
+import Joi from 'joi';
 import { UserRole } from "../enums/entities.enum";
 
 export interface UserResponse {

@@ -20,9 +20,9 @@ export class TraineeController {
         return this.traineeService.findOne(payload.id);
     }
 
-    @EventPattern(TraineePatterns.UPDATE)
+    @MessagePattern(TraineePatterns.UPDATE)
     update(@Payload() payload: { id: string, dto: UpdateTraineeDto }) {
-        this.traineeService.update(payload.id, payload.dto);
+        return this.traineeService.update(payload.id, payload.dto);
     }
 
     @EventPattern(TraineePatterns.DELETE)
