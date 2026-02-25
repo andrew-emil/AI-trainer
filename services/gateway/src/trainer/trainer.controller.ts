@@ -1,34 +1,45 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { TrainerService } from './trainer.service';
-import { CreateTrainerDto } from './dto/create-trainer.dto';
+import { Body, Controller, Delete, HttpCode, HttpStatus, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { UserRole } from 'src/common/enums/entities.enum';
 import { UpdateTrainerDto } from './dto/update-trainer.dto';
+import { TrainerService } from './trainer.service';
+import { RegisterAsTrainerDto } from 'src/auth/dto/registerAsTrainer.dto';
 
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('trainer')
 export class TrainerController {
-  constructor(private readonly trainerService: TrainerService) {}
+  constructor(private readonly trainerService: TrainerService) { }
 
+  // @Roles(UserRole.ADMIN)
+  // @Get()
+  // findAll() {
+  //   return this.trainerService.findAll();
+  // }
+
+  // @Public()
+  // @Get(':id')
+  // findOne(@Param('id') id: string) {
+  //   return this.trainerService.findOne(+id);
+  // }
+
+  @Roles(UserRole.ADMIN)
   @Post()
-  create(@Body() createTrainerDto: CreateTrainerDto) {
-    return this.trainerService.create(createTrainerDto);
+  create(@Body() dto: RegisterAsTrainerDto) {
+    return this.trainerService.create(dto);
   }
 
-  @Get()
-  findAll() {
-    return this.trainerService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.trainerService.findOne(+id);
-  }
-
+  @Roles(UserRole.ADMIN, UserRole.TRAINER)
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateTrainerDto: UpdateTrainerDto) {
-    return this.trainerService.update(+id, updateTrainerDto);
+    return this.trainerService.update(id, updateTrainerDto);
   }
 
+  @Roles(UserRole.ADMIN, UserRole.TRAINER)
   @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id') id: string) {
-    return this.trainerService.remove(+id);
+    return this.trainerService.remove(id);
   }
 }

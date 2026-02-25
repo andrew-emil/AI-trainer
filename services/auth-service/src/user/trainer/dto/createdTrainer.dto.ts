@@ -1,21 +1,8 @@
-import { Gender, UserRole } from "@prisma/client";
+import { User } from "@prisma/client";
 
 
 export type CreatedTrainer = {
-  user: {
-    createdAt: Date;
-    id: string;
-    updatedAt: Date;
-    firstName: string;
-    lastName: string;
-    username: string;
-    email: string;
-    passwordHash: string;
-    role: UserRole;
-    gender: Gender;
-    avatar?: string;
-    avatarPublicId?: string;
-  };
+  user: User
 } & {
   userId: string;
   bio: string;

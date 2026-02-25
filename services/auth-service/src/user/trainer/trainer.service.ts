@@ -6,12 +6,14 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateTrainerDto } from './dto/create-trainer.dto';
 import { CreatedTrainer } from './dto/createdTrainer.dto';
 import { UpdateTrainerDto } from './dto/update-trainer.dto';
+import { UserService } from '../user.service';
 
 @Injectable()
 export class TrainerService {
     constructor(
         private readonly prisma: PrismaService,
         private readonly cloudinaryProvider: CloudinaryProvider,
+        private readonly userService: UserService,
     ) { }
 
     /**
@@ -177,7 +179,7 @@ export class TrainerService {
         }
 
         // Convert experienceYears back to number for response
-        return TrainerConversionUtil.transformTrainer(updated) as any;
+        return TrainerConversionUtil.transformTrainer(updated);
     }
 
     async delete(id: string) {
@@ -207,6 +209,7 @@ export class TrainerService {
 
         // Delete DB records (cascade will delete certifications/transformations rows)
         await this.prisma.trainer.delete({ where: { userId: id } });
+        await this.userService.delete(trainer.userId);
 
         // Best-effort Cloudinary cleanup
         await Promise.all([

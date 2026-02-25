@@ -1,9 +1,14 @@
 import { Module } from '@nestjs/common';
-import { TrainerService } from './trainer.service';
+import { AUTH_SERVICE } from 'src/common/constants/clientModuleNames';
+import { RabbitMQClientModule } from 'src/rabbitmq-client/rabbitmq-client.module';
 import { TrainerController } from './trainer.controller';
+import { TrainerService } from './trainer.service';
 
 @Module({
   controllers: [TrainerController],
   providers: [TrainerService],
+  imports: [
+    RabbitMQClientModule.register('rabbit.authQueue', AUTH_SERVICE),
+  ]
 })
 export class TrainerModule {}

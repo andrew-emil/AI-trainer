@@ -4,7 +4,7 @@ import {
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import Joi from 'joi';
-import { firstValueFrom, lastValueFrom } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 
 export async function rpcCall<T>(
     client: ClientProxy,
@@ -13,9 +13,10 @@ export async function rpcCall<T>(
     schema: Joi.ObjectSchema<any>,
 ): Promise<T> {
     try {
+        console.log("connecting...")
         await client.connect()
         console.log('About to send message');
-        const response = await lastValueFrom(client.send<T>(pattern, payload));
+        const response = await firstValueFrom(client.send<T>(pattern, payload));
         console.log('Response received', response);
         return schema.validate(response).value;
 

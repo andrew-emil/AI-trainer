@@ -2,14 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { RegisterAsTraineeDto } from 'src/auth/dto/registerAsTrainee.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { UserService } from '../user.service';
 import { UpdateTraineeDto } from './dto/updateTrainee.dto';
 
 @Injectable()
 export class TraineeService {
     constructor(
         private readonly prisma: PrismaService,
-        private readonly userService: UserService,
     ) { }
 
     createTrainee(userId: string, traineeData: RegisterAsTraineeDto) {
@@ -44,14 +42,13 @@ export class TraineeService {
         await this.findOne(id);
         return this.prisma.trainee.update({
             where: { userId: id },
-            data: dto,
+            data: { ...dto },
             include: { user: true },
         });
     }
 
     async delete(id: string) {
         await this.findOne(id);
-        await this.userService.delete(id);
         return this.prisma.trainee.delete({ where: { userId: id } });
     }
 }

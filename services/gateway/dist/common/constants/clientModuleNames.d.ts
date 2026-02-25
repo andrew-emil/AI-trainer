@@ -1,3 +1,0 @@
-export declare const AUTH_SERVICE = "AUTH_SERVICE";
-export declare const COACH_DOMAIN_SERVICE = "COACH_DOMAIN_SERVICE";
-export declare const INTERACTION_SERVICE = "INTERACTION_SERVICE";

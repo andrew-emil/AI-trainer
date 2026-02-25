@@ -3,7 +3,7 @@ import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { AUTH_SERVICE } from 'src/common/constants/clientModuleNames';
 import { AuthResponse, AuthResponseSchema } from 'src/common/contracts/auth';
-import { AuthPatterns } from 'src/common/enums/authPatterns.enum';
+import { AuthPatterns } from 'src/common/patterns/authPatterns.enum';
 import { rpcCall } from 'src/common/utils/rpc-call.util';
 import { LoginDto } from './dto/login.dto';
 import { RegisterAsTraineeDto } from './dto/registerAsTrainee.dto';
