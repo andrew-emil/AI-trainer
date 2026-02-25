@@ -5,7 +5,7 @@ import { TrainerPattern } from 'src/common/enums/trainerPatterns.enum';
 import { UpdateTrainerDto } from './dto/update-trainer.dto';
 import { CreateTrainerDto } from './dto/create-trainer.dto';
 
-@Controller('trainer')
+@Controller()
 export class TrainerController {
     constructor(
         private readonly trainerService: TrainerService
@@ -18,12 +18,11 @@ export class TrainerController {
 
     @MessagePattern(TrainerPattern.UPDATE)
     updateTrainer(@Payload() updateTrainerDto: UpdateTrainerDto) {
-        console.log(updateTrainerDto)
         return this.trainerService.update(updateTrainerDto.userId, updateTrainerDto);
     }
 
     @EventPattern(TrainerPattern.DELETE)
-    deleteTrainer(@Payload() { userId }: UpdateTrainerDto) {
+    deleteTrainer(@Payload() { userId }: { userId: string }) {
         this.trainerService.delete(userId);
     }
 }

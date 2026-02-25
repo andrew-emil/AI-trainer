@@ -4,7 +4,7 @@ import { TraineePatterns } from 'src/common/enums/traineePatterns.enum';
 import { UpdateTraineeDto } from './dto/updateTrainee.dto';
 import { TraineeService } from './trainee.service';
 
-@Controller('trainee')
+@Controller()
 export class TraineeController {
     constructor(
         private readonly traineeService: TraineeService
@@ -16,8 +16,8 @@ export class TraineeController {
     }
 
     @MessagePattern(TraineePatterns.FIND_ONE)
-    findOne(@Payload() payload: { id: string }) {
-        return this.traineeService.findOne(payload.id);
+    findOne(@Payload() { id }: { id: string }) {
+        return this.traineeService.findOne(id);
     }
 
     @MessagePattern(TraineePatterns.UPDATE)
@@ -26,7 +26,7 @@ export class TraineeController {
     }
 
     @EventPattern(TraineePatterns.DELETE)
-    remove(@Payload() payload: { id: string }) {
-        this.traineeService.delete(payload.id);
+    remove(@Payload() { id }: { id: string }) {
+        this.traineeService.delete(id);
     }
 }
