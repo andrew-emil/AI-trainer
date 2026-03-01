@@ -23,9 +23,14 @@ export class TrainerService {
     )
   }
 
-  // findAll() {
-  //   return `This action returns all trainer`;
-  // }
+  findAll() {
+    return firstValueFrom(
+      this.authService.send(
+        TrainerPattern.GET_ALL_ACTIVE,
+        {}
+      )
+    )
+  }
 
   // findOne(id: number) {
   //   return `This action returns a #${id} trainer`;

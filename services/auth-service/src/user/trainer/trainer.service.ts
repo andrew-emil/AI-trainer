@@ -61,8 +61,17 @@ export class TrainerService {
         }) as CreatedTrainer;
     }
 
-    async findAll() {
-        return this.prisma.trainer.findMany();
+    async findAll(isActive: boolean = false) {
+        return this.prisma.trainer.findMany({
+            where: {
+                user: {
+                    trainer: {
+                        isActive
+                    }
+                }
+            },
+            include: { user: true },
+        });
     }
 
     async findOne(id: string) {
