@@ -1,0 +1,18 @@
+<svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="goldGradientInner" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="hsl(43, 87%, 65%)" />
+      <stop offset="50%" stop-color="hsl(35, 80%, 45%)" />
+      <stop offset="100%" stop-color="hsl(43, 87%, 55%)" />
+    </linearGradient>
+    <linearGradient id="goldGradientOuter" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="hsl(43, 60%, 45%)" />
+      <stop offset="50%" stop-color="hsl(35, 50%, 35%)" />
+      <stop offset="100%" stop-color="hsl(43, 60%, 40%)" />
+    </linearGradient>
+  </defs>
+  <!-- Outer Triangle -->
+  <path d="M30 5L55 50H5L30 5Z" stroke="url(#goldGradientOuter)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+  <!-- Inner Triangle -->
+  <path d="M30 18L42 42H18L30 18Z" stroke="url(#goldGradientInner)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+</svg>

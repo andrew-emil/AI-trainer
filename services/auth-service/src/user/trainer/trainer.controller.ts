@@ -25,4 +25,9 @@ export class TrainerController {
     deleteTrainer(@Payload() { userId }: { userId: string }) {
         this.trainerService.delete(userId);
     }
+
+    @MessagePattern(TrainerPattern.GET_ALL_ACTIVE)
+    getAllActive() {
+        return this.trainerService.findAll(true);
+    }
 }
