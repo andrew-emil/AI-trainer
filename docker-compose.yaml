@@ -14,14 +14,14 @@ services:
       - trainer_net
 
   mongo:
-   image: mongo:7
-  container_name: mongo_db
-  ports:
-   - "27017:27017"
-   volumes:
-    - mongodata:/data/db
-  networks:
-   - trainer_net
+    image: mongo:7
+    container_name: mongo_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodata:/data/db
+    networks:
+      - trainer_net
   # ----------------- Redis ---------------------------
   # redis:
   #  image: redis:7
@@ -96,6 +96,31 @@ services:
     restart: unless-stopped
     volumes:
       - ./services/auth-service:/app
+      - /app/node_modules
+    networks:
+      - trainer_net
+
+  # ----------------- NestJS Interaction Service -----------------
+  interaction-service:
+    container_name: interaction-service
+    build:
+      context: ./services/interaction-service
+    env_file:
+      - ./services/interaction-service/.env
+    depends_on:
+      mongo:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    ports:
+      - "3002:3000"
+    command: >
+      sh -c "
+      npm run start:dev
+      "
+    restart: unless-stopped
+    volumes:
+      - ./services/interaction-service:/app
       - /app/node_modules
     networks:
       - trainer_net

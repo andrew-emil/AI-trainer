@@ -1,12 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { NotificationRepo } from 'src/repos/notification.repo';
-import { RpcException } from '@nestjs/microservices';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
+import { GATEWAY_DOMAIN_QUEUE } from 'src/common/constants/rabbitNames.constants';
+import { GatewayPattern } from 'src/common/patterns/gateway.pattern';
 
 @Injectable()
 export class NotificationService {
   constructor(
-    private readonly notificationRepo: NotificationRepo
+    private readonly notificationRepo: NotificationRepo,
+    @Inject(GATEWAY_DOMAIN_QUEUE)
+    private readonly gatewayDomainQueue: ClientProxy,
   ) { }
 
   async create(createNotificationDto: CreateNotificationDto) {
@@ -19,7 +23,6 @@ export class NotificationService {
     }
 
     const payload = {
-      type: 'notification.created',
       occurred_at: new Date().toISOString(),
       payload: {
         notificationId: notification._id,
@@ -28,18 +31,36 @@ export class NotificationService {
       },
       metadata: { source: 'interaction-service' },
     }
+
+    this.gatewayDomainQueue.emit(GatewayPattern.NOTIFICATION_CREATED, payload);
+  }
+
+  async findAll(limit = 20, page = 1, userId: string) {
+    const [notifications, count] = await Promise.all([
+      this.notificationRepo.findByUserId(userId, limit, page),
+      this.notificationRepo.countUnread(userId),
+    ]);
+    return { notifications, count };
+  }
+
+  async markAsRead(id: string) {
+    const notification = await this.notificationRepo.markRead(id);
+    if (!notification) {
+      throw new RpcException({
+        status: 404,
+        message: "Notification not found"
+      })
+    }
     return notification;
   }
 
-  findAll() {
-    return `This action returns all notification`;
+  async markAllAsRead(userId: string) {
+    const notifications = await this.notificationRepo.markAllRead(userId);
+    return notifications;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} notification`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} notification`;
+  async delete(id: string, userId: string) {
+    const notification = await this.notificationRepo.delete(id, userId);
+    return notification.count;
   }
 }
