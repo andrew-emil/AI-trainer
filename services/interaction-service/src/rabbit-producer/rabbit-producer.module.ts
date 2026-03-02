@@ -1,45 +1,39 @@
-import { Module } from '@nestjs/common';
+import { DynamicModule, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ClientsModule, Transport } from '@nestjs/microservices';
-import { COACH_DOMAIN_QUEUE, INTERACTION_QUEUE } from 'src/common/constants/rabbitNames.constants';
-import { RabbitProducerService } from './rabbit-producer.service';
+import { Transport } from '@nestjs/microservices';
 
-@Module({
-  providers: [RabbitProducerService],
-  imports: [
-    ClientsModule.registerAsync([
-      {
-        name: COACH_DOMAIN_QUEUE,
-        useFactory: (configService: ConfigService) => ({
-          transport: Transport.RMQ,
-          options: {
-            urls: [configService.getOrThrow<string>('rabbit.url')],
-            queue: configService.getOrThrow<string>('rabbit.coachDomainQueue'),
-            queueOptions: {
-              durable: false,
-            },
+@Module({})
+export class RabbitProducerModule {
+  static register(queueKey: string, name: string): DynamicModule {
+    return {
+      module: RabbitProducerModule,
+      providers: [
+        {
+          provide: name,
+          useFactory: (configService: ConfigService) => {
+            const queue = configService.getOrThrow<string>(queueKey);
+            const url = configService.getOrThrow<string>('rabbit.url');
+
+            if (!url || !queue) {
+              throw new Error('Rabbit URL or queue is not defined');
+            }
+
+            return {
+              transport: Transport.RMQ,
+              options: {
+                urls: [url],
+                queue,
+                queueOptions: {
+                  durable: false,
+                },
+              },
+            }
           },
-        }),
-        inject: [ConfigService],
-      },
-    ]),
-    ClientsModule.registerAsync([
-      {
-        name: INTERACTION_QUEUE,
-        useFactory: (configService: ConfigService) => ({
-          transport: Transport.RMQ,
-          options: {
-            urls: [configService.getOrThrow<string>('rabbit.url')],
-            queue: configService.getOrThrow<string>('rabbit.interactionQueue'),
-            queueOptions: {
-              durable: false,
-            },
-          },
-        }),
-        inject: [ConfigService],
-      },
-    ]),
-  ],
-  exports: [RabbitProducerService],
-})
-export class RabbitProducerModule { }
+          inject: [ConfigService],
+        },
+      ],
+      exports: [name],
+    }
+
+  }
+}

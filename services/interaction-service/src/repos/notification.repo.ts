@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { Notification, INotification } from "../models/notification.model";
+import { RpcException } from "@nestjs/microservices";
 
 @Injectable()
 export class NotificationRepo {
@@ -14,11 +15,12 @@ export class NotificationRepo {
         return this.notificationModel.create(data);
     }
 
-    async findByUserId(userId: string, limit = 20) {
+    async findByUserId(userId: string, limit = 20, page = 1) {
         return this.notificationModel
             .find({ userId })
             .sort({ createdAt: -1 })
             .limit(limit)
+            .skip((page - 1) * limit)
             .lean()
             .exec();
     }
@@ -41,7 +43,15 @@ export class NotificationRepo {
         return this.notificationModel.countDocuments({ userId, read: false });
     }
 
-    async delete(notificationId: string) {
-        return this.notificationModel.deleteOne({ _id: notificationId });
+    async delete(notificationId: string, userId: string) {
+        const deletedNotification = await this.notificationModel.deleteOne({ _id: notificationId, userId });
+        if (!deletedNotification.deletedCount) {
+            throw new RpcException({
+                status: 404,
+                message: "Notification not found"
+            })
+        }
+        const count = await this.notificationModel.countDocuments({ userId, read: false });
+        return { deletedNotification, count };
     }
 }
