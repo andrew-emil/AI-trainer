@@ -7,7 +7,7 @@ export interface IEmailJob extends Document {
     subject: string;
     bodyHtml?: string;
     bodyText?: string;
-    template?: string;     // optional template name
+    template: string;     // optional template name
     payload?: any;         // template variables
     status: EmailStatus;
     attempts: number;
@@ -21,7 +21,7 @@ export const EmailQueueSchema = new Schema<IEmailJob>({
     subject: { type: String },
     bodyHtml: { type: String },
     bodyText: { type: String },
-    template: { type: String },
+    template: { type: String, required: true },
     payload: { type: Schema.Types.Mixed },
     status: { type: String, enum: Object.values(EmailStatus), default: EmailStatus.PENDING, index: true },
     attempts: { type: Number, default: 0 },
