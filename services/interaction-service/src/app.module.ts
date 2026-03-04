@@ -17,6 +17,7 @@ import { RabbitProducerModule } from './rabbit-producer/rabbit-producer.module';
 import { ConversationRepo } from './repos/conversation.repo';
 import { MessageRepo } from './repos/message.repo';
 import { NotificationRepo } from './repos/notification.repo';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -35,7 +36,8 @@ import { NotificationRepo } from './repos/notification.repo';
     }),
     DatabaseModule,
     NotificationModule,
-    RabbitProducerModule
+    RabbitProducerModule,
+    MailModule
   ],
   controllers: [AppController],
   providers: [
