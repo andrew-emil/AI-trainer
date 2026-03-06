@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
-import { Notification, INotification } from "../models/notification.model";
+import { Notification, INotification } from "../database/models/notification.model";
 import { RpcException } from "@nestjs/microservices";
 
 @Injectable()

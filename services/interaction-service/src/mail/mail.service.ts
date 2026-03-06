@@ -11,7 +11,6 @@ export class MailService {
         private readonly commandBus: CommandBus,
     ) { }
 
-
     async sendPasswordResetEmail(to: string, payload: Omit<PasswordResetTemplateDto, 'email'>) {
         return this.commandBus.execute(
             new QueueEmailCommand(

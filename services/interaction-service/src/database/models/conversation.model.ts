@@ -1,4 +1,5 @@
 import { Document, model, Schema, Types } from "mongoose";
+import { Message } from "./message.model";
 
 export interface IConversation extends Document {
     _id: Types.ObjectId;
@@ -20,13 +21,14 @@ export interface IConversation extends Document {
 export const ConversationSchema = new Schema<IConversation>({
     traineeId: { type: String, required: true },
     trainerId: { type: String, required: true },
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now },
     lastMessage: {
-        messageId: { type: Types.ObjectId, ref: 'Message' },
-        text: String,
-        senderId: String,
-        createdAt: Date,
+        type: {
+            messageId: { type: Types.ObjectId, ref: Message.name },
+            text: { type: String, required: true },
+            senderId: { type: String, required: true },
+            createdAt: { type: Date, default: Date.now },
+        },
+        default: null,
     },
     metadata: { type: Object, default: {} },
 }, { timestamps: true });

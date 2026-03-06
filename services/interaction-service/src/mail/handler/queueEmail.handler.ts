@@ -1,7 +1,7 @@
 import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
 import { QueueEmailCommand } from "../commands/queueEmail.command";
 import { InjectModel } from "@nestjs/mongoose";
-import { EmailQueue, IEmailJob } from "src/models/emailQueue.model";
+import { EmailQueue, IEmailJob } from "src/database/models/emailQueue.model";
 import { Model } from "mongoose";
 
 @CommandHandler(QueueEmailCommand)

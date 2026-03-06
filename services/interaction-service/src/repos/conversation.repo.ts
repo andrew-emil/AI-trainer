@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
-import { Conversation, IConversation } from "../models/conversation.model";
+import { Conversation, IConversation } from "../database/models/conversation.model";
 
 @Injectable()
 export class ConversationRepo {

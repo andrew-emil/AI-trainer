@@ -23,8 +23,6 @@ export const NotificationSchema = new Schema<INotification>({
     actionUrl: { type: String },
     seenAt: { type: Date },
     metadata: { type: Object, default: {} },
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now },
 }, { timestamps: true });
 
 NotificationSchema.index({ userId: 1, createdAt: -1 });
