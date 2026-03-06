@@ -1,6 +1,10 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { Conversation, ConversationSchema } from './models/conversation.model';
+import { Message, MessageSchema } from './models/message.model';
+import { Notification, NotificationSchema } from './models/notification.model';
+import { EmailQueue, EmailQueueSchema } from './models/emailQueue.model';
 
 @Module({
     imports: [
@@ -11,6 +15,15 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
                 uri: config.get<string>('MONGO_URI'),
             }),
         }),
+        MongooseModule.forFeature([
+            { name: Conversation.name, schema: ConversationSchema },
+            { name: Message.name, schema: MessageSchema },
+            { name: Notification.name, schema: NotificationSchema },
+            { name: EmailQueue.name, schema: EmailQueueSchema },
+        ]),
     ],
+    exports: [
+        MongooseModule
+    ]
 })
 export class DatabaseModule { }

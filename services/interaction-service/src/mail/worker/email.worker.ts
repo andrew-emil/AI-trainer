@@ -2,7 +2,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { renderFile } from "ejs";
 import { join } from "path";
 import { MailtrapClient } from "mailtrap";
-import { EmailQueue, IEmailJob } from "src/models/emailQueue.model";
+import { EmailQueue, IEmailJob } from "src/database/models/emailQueue.model";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { ConfigService } from "@nestjs/config";
@@ -29,7 +29,7 @@ export class EmailWorker {
         return renderFile(filePath, context);
     }
 
-    @Cron(CronExpression.EVERY_10_SECONDS)
+    @Cron(CronExpression.EVERY_30_SECONDS)
     async processQueue() {
         const jobs = await
             this.emailQueueModel

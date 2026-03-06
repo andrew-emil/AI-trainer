@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Message, IMessage } from '../models/message.model';
+import { Message, IMessage } from '../database/models/message.model';
 
 @Injectable()
 export class MessageRepo {
@@ -14,7 +14,7 @@ export class MessageRepo {
         return this.messageModel.create(data);
     }
 
-    async findByConversation(conversationId: string, limit = 20) {
+    async findMessagesByConversation(conversationId: string, limit = 50) {
         return this.messageModel
             .find({ conversationId })
             .sort({ createdAt: -1 })
@@ -23,10 +23,7 @@ export class MessageRepo {
             .exec();
     }
 
-    async markDeleted(messageId: string) {
-        return this.messageModel.updateOne(
-            { _id: messageId },
-            { $set: { deleted: true } },
-        );
+    async deleteMessage(messageId: string) {
+        return this.messageModel.findByIdAndDelete(messageId).lean().exec();
     }
 }
