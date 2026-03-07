@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { AUTH_SERVICE } from 'src/common/constants/clientModuleNames';
-import { UserResponse, UserResponseSchema } from 'src/common/contracts/user';
+import { IUserResponse, UserResponseSchema } from 'src/common/contracts/user';
 import { UserPattern } from 'src/common/patterns/userPatterns.enum';
 import { rpcCall } from 'src/common/utils/rpc-call.util';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -14,7 +14,7 @@ export class UserService {
   ) { }
 
   findOne(userId: string) {
-    return rpcCall<UserResponse>(
+    return rpcCall<IUserResponse>(
       this.authService,
       UserPattern.GET_ME,
       { userId },
@@ -23,7 +23,7 @@ export class UserService {
   }
 
   update(userId: string, updateUserDto: UpdateUserDto) {
-    return rpcCall<UserResponse>(
+    return rpcCall<IUserResponse>(
       this.authService,
       UserPattern.UPDATE,
       { userId, ...updateUserDto },

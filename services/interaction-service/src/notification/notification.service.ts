@@ -21,14 +21,15 @@ export class NotificationService {
         message: "Failed to create notification"
       })
     }
+    const count = await this.notificationRepo.countUnread(notification.userId);
 
     const payload = {
-      occurred_at: new Date().toISOString(),
-      payload: {
-        notificationId: notification._id,
-        userId: notification.userId,
-        type: notification.type,
-      },
+      id: notification._id.toString(),
+      type: notification.type,
+      createdAt: new Date().toISOString(),
+      message: notification.message,
+      userId: notification.userId,
+      count,
       metadata: { source: 'interaction-service' },
     }
 

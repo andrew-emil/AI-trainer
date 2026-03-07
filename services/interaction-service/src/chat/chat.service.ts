@@ -1,22 +1,19 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
+import { Types } from 'mongoose';
+import { INTERACTION_QUEUE } from 'src/common/constants/rabbitNames.constants';
+import { NotificationType } from 'src/common/enums/notificationType.enum';
+import { NotificationPattern } from 'src/common/patterns/notification.pattern';
+import { IMessage } from 'src/database/models/message.model';
+import { CreateNotificationDto } from 'src/notification/dto/create-notification.dto';
+import { ConversationRepo } from 'src/repos/conversation.repo';
 import { MessageRepo } from 'src/repos/message.repo';
 import { CreateChatDto } from './dto/create-chat.dto';
 import { SendMessageDto } from './dto/sendMessage.dto';
-import { ConversationRepo } from 'src/repos/conversation.repo';
-import { IMessage } from 'src/database/models/message.model';
-import { ClientProxy, RpcException } from '@nestjs/microservices';
-import { Types } from 'mongoose';
-import { GATEWAY_DOMAIN_QUEUE, INTERACTION_QUEUE } from 'src/common/constants/rabbitNames.constants';
-import { GatewayPattern } from 'src/common/patterns/gateway.pattern';
-import { NotificationPattern } from 'src/common/patterns/notification.pattern';
-import { CreateNotificationDto } from 'src/notification/dto/create-notification.dto';
-import { NotificationType } from 'src/common/enums/notificationType.enum';
 
 @Injectable()
 export class ChatService {
   constructor(
-    @Inject(GATEWAY_DOMAIN_QUEUE)
-    private readonly gatewayDomainQueue: ClientProxy,
     @Inject(INTERACTION_QUEUE)
     private readonly interactionQueue: ClientProxy,
     private readonly messageRepo: MessageRepo,
@@ -57,7 +54,7 @@ export class ChatService {
         message: 'Failed to update conversation'
       });
     }
-    this.gatewayDomainQueue.emit(GatewayPattern.MESSAGE_CREATED, { message });
+
     const notificationDto: CreateNotificationDto = {
       userId: message.receiverId,
       type: NotificationType.NEW_CHAT_MESSAGE,
@@ -68,13 +65,15 @@ export class ChatService {
       }
     }
     this.interactionQueue.send(NotificationPattern.CREATE, notificationDto);
+
+    return { message }
   }
 
   async getMessages(conversationId: string) {
     return this.messageRepo.findMessagesByConversation(conversationId);
   }
 
-  async deleteMessage(messageId: string) {
+  private async deleteMessage(messageId: string) {
     const deletedMessage = await this.messageRepo.deleteMessage(messageId);
     if (!deletedMessage) {
       throw new RpcException({
@@ -82,6 +81,6 @@ export class ChatService {
         message: 'Message not found'
       });
     }
-    this.gatewayDomainQueue.emit(GatewayPattern.MESSAGE_DELETED, { messageId });
+    return deletedMessage;
   }
 }
