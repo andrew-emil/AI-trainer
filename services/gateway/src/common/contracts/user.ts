@@ -1,7 +1,7 @@
 import Joi from 'joi';
 import { UserRole } from "../enums/entities.enum";
 
-export interface UserResponse {
+export interface IUserResponse {
     id: string;
     username: string;
     email: string;
@@ -12,7 +12,7 @@ export interface UserResponse {
     avatarPublicId?: string | null;
 }
 
-export const UserResponseSchema = Joi.object<UserResponse>({
+export const UserResponseSchema = Joi.object<IUserResponse>({
     id: Joi.string().required(),
     username: Joi.string().required(),
     email: Joi.string().required(),

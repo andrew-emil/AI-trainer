@@ -14,6 +14,8 @@ import { TrainerModule } from './trainer/trainer.module';
 import { UserModule } from './user/user.module';
 import { AdminModule } from './admin/admin.module';
 import { NotificationModule } from './notification/notification.module';
+import { MailsModule } from './mails/mails.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -25,7 +27,7 @@ import { NotificationModule } from './notification/notification.module';
         .concat(jwtSchema),
       load: [rabbitConfig, jwtConfig],
     }),
-    UserModule, TrainerModule, TraineeModule, AuthModule, RabbitMQClientModule, AdminModule, NotificationModule
+    UserModule, TrainerModule, TraineeModule, AuthModule, RabbitMQClientModule, AdminModule, NotificationModule, MailsModule, ChatModule
   ],
   controllers: [AppController],
   providers: [

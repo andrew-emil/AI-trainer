@@ -24,7 +24,7 @@ export class RabbitProducerModule {
                 urls: [url],
                 queue,
                 queueOptions: {
-                  durable: false,
+                  durable: true,
                 },
               },
             }

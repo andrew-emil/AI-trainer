@@ -1,34 +1,37 @@
-import { WebSocketGateway, SubscribeMessage, MessageBody } from '@nestjs/websockets';
-import { NotificationService } from './notification.service';
-import { CreateNotificationDto } from './dto/create-notification.dto';
-import { UpdateNotificationDto } from './dto/update-notification.dto';
+import { OnGatewayConnection, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
+import { Server } from 'socket.io';
+import { AuthPayloadDto } from 'src/auth/dto/authPayload.dto';
+import { SocketWithAuth } from 'src/socket-io.adapter';
+import { NewNotificationPayload } from './dto/newNotification.type';
 
-@WebSocketGateway()
-export class NotificationGateway {
-  constructor(private readonly notificationService: NotificationService) {}
+@WebSocketGateway({
+  namespace: '/notification',
+  origin: process.env.FRONTEND_URL,
+  credentials: true,
+})
+export class NotificationGateway implements OnGatewayConnection {
+  @WebSocketServer()
+  server: Server;
 
-  @SubscribeMessage('createNotification')
-  create(@MessageBody() createNotificationDto: CreateNotificationDto) {
-    return this.notificationService.create(createNotificationDto);
+  private userRoom(userId: string) {
+    return `user:${userId}`;
   }
 
-  @SubscribeMessage('findAllNotification')
-  findAll() {
-    return this.notificationService.findAll();
+  async handleConnection(client: SocketWithAuth) {
+    const user = client.data.user as AuthPayloadDto;
+    if (!user) {
+      client.disconnect();
+      return;
+    }
+
+    await client.join(this.userRoom(user.sub));
   }
 
-  @SubscribeMessage('findOneNotification')
-  findOne(@MessageBody() id: number) {
-    return this.notificationService.findOne(id);
+  emitNewNotification(recipientId: string, payload: Omit<NewNotificationPayload, "userId">) {
+    this.server.to(this.userRoom(recipientId)).emit('notification:new', JSON.stringify(payload));
   }
 
-  @SubscribeMessage('updateNotification')
-  update(@MessageBody() updateNotificationDto: UpdateNotificationDto) {
-    return this.notificationService.update(updateNotificationDto.id, updateNotificationDto);
-  }
-
-  @SubscribeMessage('removeNotification')
-  remove(@MessageBody() id: number) {
-    return this.notificationService.remove(id);
+  emitUnReadNotificationCount(recipientId: string, count: number) {
+    this.server.to(this.userRoom(recipientId)).emit('notification:unreadCount', JSON.stringify({ count }));
   }
 }
