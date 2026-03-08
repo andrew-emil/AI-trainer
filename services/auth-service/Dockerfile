@@ -3,7 +3,7 @@ FROM node:25.6-alpine3.22
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 COPY . .
 

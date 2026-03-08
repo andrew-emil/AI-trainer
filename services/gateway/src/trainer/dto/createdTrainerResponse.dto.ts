@@ -1,7 +1,7 @@
-import { UserResponse } from "src/common/contracts/user";
+import { IUserResponse } from "src/common/contracts/user";
 
 export type CreatedTrainer = {
-    user: UserResponse
+    user: IUserResponse
 } & {
     userId: string;
     bio: string;

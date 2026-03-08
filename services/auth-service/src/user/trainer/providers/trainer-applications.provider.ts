@@ -94,68 +94,71 @@ export class TrainerApplicationsProvider {
                 });
 
             // 1️⃣ Activate Trainer
-            await tx.trainer.update({
+            const updatedTrainer = await tx.trainer.update({
                 where: { userId: request.userId },
                 data: { isActive: true },
-                include: { user: true },
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            username: true,
+                            email: true,
+                        }
+                    }
+                }
             });
-
-            //TODO: send email and notification
-            // this.mailService.sendTrainerAccountApproveEmail(trainer.user.email, {
-            //     username: trainer.user.username,
-            //     loginLink: `${frontendUrl}/login`
-            // }),
-            // this.notificationPreferencesService.createNotificationPreference(
-            //     request.userId,
-            //     UserRole.trainer,
-            // ),
 
             //TODO: calculate rank score via sending to coaching service
             // this.trainerService.calculateRankScore(request.userId, tx)
 
-
             // 3️⃣ Update request status
-            return tx.trainerApplication.update({
+            await tx.trainerApplication.update({
                 where: { id: requestId },
                 data: {
                     status: TrainerApplicationStatus.approved,
                 },
             });
+
+            return updatedTrainer
         });
     }
 
     async rejectTrainerRequest(requestId: string, adminNote?: string) {
-        const request = await this.prisma.trainerApplication.findUnique({
-            where: { id: requestId },
-            include: { user: true },
-        });
-
-        if (!request) throw new RpcException({
-            status: 404,
-            message: "Trainer request not found"
-        });
-
-        if (request.status !== "pending")
-            throw new RpcException({
-                status: 400,
-                message: "Request already processed"
+        return this.prisma.$transaction(async (tx) => {
+            const request = await tx.trainerApplication.findUnique({
+                where: { id: requestId },
+                include: { user: true },
             });
 
-        //TODO: send email
-        // await this.mailService.sendTrainerAccountRejectEmail(request.user.email, {
-        //     username: request.user.username,
-        //     rejectionReason:
-        //         adminNote ?? "unfortunately, you didn't match our expectations",
-        //     reapplyLink: `${frontendUrl}/register?role=trainer`,
-        // });
+            if (!request) throw new RpcException({
+                status: 404,
+                message: "Trainer request not found"
+            });
 
-        return this.prisma.trainerApplication.update({
-            where: { id: requestId },
-            data: {
-                status: TrainerApplicationStatus.rejected,
-                adminNote,
-            },
-        });
+            if (request.status !== "pending")
+                throw new RpcException({
+                    status: 400,
+                    message: "Request already processed"
+                });
+
+            return await tx.trainerApplication.update({
+                where: { id: requestId },
+                data: {
+                    status: TrainerApplicationStatus.rejected,
+                    adminNote,
+                },
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            username: true,
+                            email: true,
+                        }
+                    },
+                }
+            });
+        })
+
     }
 
     deleteTrainerApplication(id: string) {
