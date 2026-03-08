@@ -9,6 +9,7 @@ import { UserService } from './user.service';
   providers: [UserService],
   imports: [
     RabbitMQClientModule.register('rabbit.authQueue', AUTH_SERVICE),
-  ]
+  ],
+  exports: [UserService]
 })
 export class UserModule { }

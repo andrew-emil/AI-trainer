@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsUrl } from "class-validator";
+import { IsNotEmpty, IsOptional, IsString, IsUrl } from "class-validator";
 import { BaseMailDto } from "./baseMail.dto";
 
 export class TrainerAccountRejectDto extends BaseMailDto {
@@ -7,8 +7,8 @@ export class TrainerAccountRejectDto extends BaseMailDto {
     username: string;
 
     @IsString()
-    @IsNotEmpty()
-    rejectionReason: string;
+    @IsOptional()
+    rejectionReason?: string | null;
 
     @IsUrl()
     @IsNotEmpty()

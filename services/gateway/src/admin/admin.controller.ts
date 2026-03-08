@@ -22,13 +22,15 @@ export class AdminController {
   }
 
   @Patch('trainer-requests/:id/approve')
-  approveTrainerRequest(@Param('id') id: string) {
-    return this.adminService.approveTrainerRequest(id)
+  async approveTrainerRequest(@Param('id') id: string) {
+    await this.adminService.approveTrainerRequest(id)
+    return { message: "Trainer Account Approved Successfully"}
   }
 
   @Patch('trainer-requests/:id/reject')
-  rejectTrainerRequest(@Param('id') id: string, @Body('adminNote') adminNote?: string) {
-    return this.adminService.rejectTrainerRequest(id, adminNote)
+  async rejectTrainerRequest(@Param('id') id: string, @Body('adminNote') adminNote?: string) {
+    await this.adminService.rejectTrainerRequest(id, adminNote)
+    return { message: "Trainer Account Rejected Successfully" }
   }
 
   @Delete('trainer-requests/:id')

@@ -11,9 +11,10 @@ import { EmailQueue, EmailQueueSchema } from './models/emailQueue.model';
         MongooseModule.forRootAsync({
             imports: [ConfigModule],
             inject: [ConfigService],
-            useFactory: (config: ConfigService) => ({
-                uri: config.get<string>('MONGO_URI'),
-            }),
+            useFactory: (config: ConfigService) => {
+                const uri = config.getOrThrow<string>('MONGO_URI')
+                return { uri }
+            },
         }),
         MongooseModule.forFeature([
             { name: Conversation.name, schema: ConversationSchema },
