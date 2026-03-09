@@ -124,6 +124,32 @@ services:
       - /app/node_modules
     networks:
       - trainer_net
+  # ----------------- NestJS Coaching Domain Service -----------------
+  coaching-service:
+    container_name: coaching-service
+    build:
+      context: ./services/coaching-service
+    env_file:
+      - ./services/coaching-service/.env
+    depends_on:
+      postgres:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    ports:
+      - "3003:3000"
+    command: >
+      sh -c "
+      npx prisma generate &&
+      npx prisma migrate deploy &&
+      npm run start:dev
+      "
+    restart: unless-stopped
+    volumes:
+      - ./services/coaching-service:/app
+      - /app/node_modules
+    networks:
+      - trainer_net
 
 networks:
   trainer_net:

@@ -1,0 +1,103 @@
+model Food {
+    id             String   @id
+    name           String
+    alternateNames String[] @map("alternate_names")
+    description    String?
+    type           String?
+    tags           String[]
+    serving        Json?
+    createdAt      DateTime @default(now())
+
+    searchDocument Unsupported("tsvector")?
+
+    macros            FoodMacros?
+    nutrients         FoodNutrient[]
+    nutritionDayFoods NutritionDayFood[]
+
+    @@index([searchDocument], type: Gin)
+}
+
+model FoodMacros {
+    id       String @id @default(uuid())
+    foodId   String @unique
+    calories Float
+    protein  Float
+    carbs    Float
+    fat      Float
+
+    food Food @relation(fields: [foodId], references: [id], onDelete: Cascade)
+}
+
+model FoodNutrient {
+    id     String @id @default(uuid())
+    foodId String
+    key    String // vitamin_c, iron, zinc
+    value  Float
+    unit   String // g, mg, µg, kcal
+
+    food Food @relation(fields: [foodId], references: [id], onDelete: Cascade)
+
+    @@unique([foodId, key])
+    @@index([foodId])
+    @@index([key])
+}
+
+model NutritionPlan {
+    id        String @id @default(uuid())
+    trainerId String
+
+    name  String
+    goal  TraineeGoal
+    weeks Int
+
+    createdAt DateTime @default(now())
+
+    days     NutritionDay[]
+    trainees TraineeNutritionPlan[]
+
+    @@index([trainerId])
+}
+
+model NutritionDay {
+    id       String @id @default(uuid())
+    planId   String
+    name     String
+    dayIndex Int
+
+    plan NutritionPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+    meals NutritionMeal[]
+
+    @@unique([planId, dayIndex])
+}
+
+model NutritionMeal {
+    id             String  @id @default(uuid())
+    nutritionDayId String
+    name           String
+    orderIndex     Int
+    time           String?
+
+    nutritionDay NutritionDay       @relation(fields: [nutritionDayId], references: [id], onDelete: Cascade)
+    foods        NutritionDayFood[]
+
+    @@unique([nutritionDayId, orderIndex])
+    @@index([nutritionDayId])
+}
+
+model NutritionDayFood {
+    id String @id @default(uuid())
+
+    mealId String
+    foodId String
+
+    meal NutritionMeal @relation(fields: [mealId], references: [id], onDelete: Cascade)
+    food Food          @relation(fields: [foodId], references: [id], onDelete: Cascade)
+
+    quantity   Float
+    unit       String
+    orderIndex Int
+
+    @@unique([mealId, orderIndex])
+    @@index([mealId])
+}

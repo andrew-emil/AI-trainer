@@ -1,0 +1,39 @@
+// Enums
+enum membershipStatus {
+    active
+    inactive
+}
+
+enum RequestStatus {
+    pending
+    approved
+    rejected
+    cancelled_by_the_trainee
+}
+
+// Models
+model TrainerTrainee {
+    id               String           @id @default(uuid())
+    trainerId        String
+    traineeId        String           @unique
+    membershipStatus membershipStatus @default(active)
+    sessionsCount    Int
+    assignedAt       DateTime?
+    createdAt        DateTime         @default(now())
+
+    @@unique([trainerId, traineeId])
+    @@index([trainerId])
+}
+
+model TrainerTraineeRequest {
+    id            String        @id @default(uuid())
+    trainerId     String
+    traineeId     String
+    sessionsCount Int
+    status        RequestStatus @default(pending)
+    createdAt     DateTime      @default(now())
+    respondedAt   DateTime?
+
+    @@index([trainerId])
+    @@index([traineeId])
+}
