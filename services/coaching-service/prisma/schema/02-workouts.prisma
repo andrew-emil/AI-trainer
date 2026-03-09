@@ -1,0 +1,92 @@
+// Enums
+enum TraineeGoal {
+    cut
+    bulk
+    maintenance
+    strength
+    body_recomb
+}
+
+// Models
+model Exercise {
+    id               String   @id @default(uuid())
+    name             String   @unique
+    gifUrl           String
+    targetMuscles    String[]
+    bodyParts        String[]
+    equipments       String[]
+    secondaryMuscles String[]
+    instructions     String[]
+
+    planItems        WorkoutDayExercise[]
+    workoutExercises WorkoutExercise[]
+
+    @@index([targetMuscles])
+    @@index([bodyParts])
+    @@index([equipments])
+}
+
+model Muscle {
+    id   String @id @default(uuid())
+    name String @unique
+}
+
+model BodyPart {
+    id   String @id @default(uuid())
+    name String @unique
+}
+
+model Equipment {
+    id   String @id @default(uuid())
+    name String @unique
+}
+
+model WorkoutPlan {
+    id        String @id @default(uuid())
+    trainerId String
+
+    name  String
+    goal  TraineeGoal
+    weeks Int
+
+    createdAt DateTime @default(now())
+
+    days     WorkoutDay[]
+    trainees TraineeWorkoutPlan[]
+
+    @@index([trainerId])
+}
+
+model WorkoutDay {
+    id       String @id @default(uuid())
+    planId   String
+    name     String // Push / Pull / Legs / Rest
+    dayIndex Int // Order of the day inside the plan
+
+    plan WorkoutPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+    exercises       WorkoutDayExercise[]
+    workoutSessions WorkoutSession[]
+
+    @@unique([planId, dayIndex])
+}
+
+model WorkoutDayExercise {
+    id String @id @default(uuid())
+
+    workoutDayId String
+    exerciseId   String
+
+    workoutDay WorkoutDay @relation(fields: [workoutDayId], references: [id], onDelete: Cascade)
+    exercise   Exercise   @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+
+    sets Int
+
+    repsMin Int
+    repsMax Int
+
+    restSeconds Int?
+    orderIndex  Int
+
+    @@unique([workoutDayId, orderIndex])
+}

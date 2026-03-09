@@ -1,0 +1,117 @@
+// Enums
+enum ActivityType {
+    WORKOUT_COMPLETED
+    NUTRITION_PLAN_ASSIGNED
+    WEIGHT_LOGGED
+    TRAINER_REQUESTED
+    MEMBERSHIP_RENEWED
+}
+
+// Models
+model TraineeWorkoutPlan {
+    id        String      @id @default(uuid())
+    planId    String
+    traineeId String
+    startDate DateTime
+    endDate   DateTime?
+    active    Boolean     @default(true)
+    plan      WorkoutPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+    @@unique([traineeId, planId])
+    @@index([traineeId])
+    @@index([planId])
+}
+
+model TraineeNutritionPlan {
+    id              String    @id @default(uuid())
+    traineeId       String
+    nutritionPlanId String
+    startDate       DateTime
+    endDate         DateTime?
+    active          Boolean   @default(true)
+
+      nutritionPlan   NutritionPlan @relation(fields: [nutritionPlanId], references: [id], onDelete: Cascade)
+
+    @@unique([traineeId, nutritionPlanId])
+    @@index([traineeId])
+    @@index([nutritionPlanId])
+}
+
+model WorkoutSession {
+    id        String @id @default(uuid())
+    traineeId String
+    dayId     String
+
+    startedAt     DateTime
+    finishedAt    DateTime?
+    totalDuration Int?
+    totalRestTime Int?
+
+    workoutDay WorkoutDay        @relation(fields: [dayId], references: [id], onDelete: Cascade)
+    exercises  WorkoutExercise[]
+
+    @@index([traineeId, startedAt])
+}
+
+model WorkoutExercise {
+    id         String @id @default(uuid())
+    sessionId  String
+    exerciseId String
+    order      Int
+
+    startedAt  DateTime
+    finishedAt DateTime?
+    totalRest  Int?
+
+    session  WorkoutSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+    exercise Exercise       @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+    sets     WorkoutSet[]
+
+    @@index([sessionId])
+}
+
+model WorkoutSet {
+    id                String @id @default(uuid())
+    workoutExerciseId String
+
+    setNumber Int
+    reps      Int
+    weight    Float
+    rir       Float?
+
+    duration  Int?
+    restAfter Int?
+
+    createdAt DateTime @default(now())
+
+    workoutExercise WorkoutExercise @relation(fields: [workoutExerciseId], references: [id], onDelete: Cascade)
+
+    @@index([workoutExerciseId])
+}
+
+model BodyWeightLog {
+    id        String   @id @default(uuid())
+    traineeId String
+    weight    Float
+    smm       Float?
+    pbf       Float?
+    loggedAt  DateTime @default(now())
+
+    @@index([traineeId, loggedAt])
+}
+
+model ActivityLog {
+    id String @id @default(uuid())
+
+    userId String
+
+    type        ActivityType
+    title       String
+    description String?
+    meta        Json?
+
+    createdAt DateTime @default(now())
+
+    @@index([userId, createdAt])
+    @@index([type])
+}

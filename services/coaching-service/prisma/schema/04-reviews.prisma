@@ -1,0 +1,12 @@
+model TrainerReview {
+    id        String   @id @default(uuid())
+    trainerId String
+    traineeId String
+    rating    Int
+    comment   String?
+    createdAt DateTime @default(now())
+
+    @@unique([trainerId, traineeId])
+    @@index([trainerId])
+    @@index([traineeId])
+}
