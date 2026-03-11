@@ -1,35 +1,31 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { ActivityLogService } from './activity-log.service';
+import { GetAllLogsDto } from './dto/get-all-logs.dto';
+import { ActivityLogsPatterns } from 'src/common/patterns/activity-log.pattern';
 import { CreateActivityLogDto } from './dto/create-activity-log.dto';
-import { UpdateActivityLogDto } from './dto/update-activity-log.dto';
 
 @Controller()
 export class ActivityLogController {
-  constructor(private readonly activityLogService: ActivityLogService) {}
+  constructor(private readonly activityLogService: ActivityLogService) { }
 
-  @MessagePattern('createActivityLog')
-  create(@Payload() createActivityLogDto: CreateActivityLogDto) {
-    return this.activityLogService.create(createActivityLogDto);
+  @MessagePattern(ActivityLogsPatterns.CREATE_LOG)
+  createActivityLog(@Payload() payload: CreateActivityLogDto) {
+    return this.activityLogService.createActivityLog(payload);
   }
 
-  @MessagePattern('findAllActivityLog')
-  findAll() {
-    return this.activityLogService.findAll();
+  @MessagePattern(ActivityLogsPatterns.GET_ALL_LOGS)
+  getAllActivityLogs(@Payload() payload: GetAllLogsDto) {
+    return this.activityLogService.getAllActivityLogs(payload.userId, payload.page, payload.limit);
   }
 
-  @MessagePattern('findOneActivityLog')
-  findOne(@Payload() id: number) {
-    return this.activityLogService.findOne(id);
+  @MessagePattern(ActivityLogsPatterns.GET_LAST_THREE_LOGS)
+  getLastThreeActivityLogs(@Payload() { userId }: { userId: string }) {
+    return this.activityLogService.getLastThreeActivityLogs(userId);
   }
 
-  @MessagePattern('updateActivityLog')
-  update(@Payload() updateActivityLogDto: UpdateActivityLogDto) {
-    return this.activityLogService.update(updateActivityLogDto.id, updateActivityLogDto);
-  }
-
-  @MessagePattern('removeActivityLog')
-  remove(@Payload() id: number) {
-    return this.activityLogService.remove(id);
+  @MessagePattern(ActivityLogsPatterns.DELETE_LOG)
+  deleteActivityLog(@Payload() { userId, id }: { userId: string, id: string }) {
+    return this.activityLogService.deleteActivityLog(userId, id);
   }
 }

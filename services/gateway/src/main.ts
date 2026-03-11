@@ -1,7 +1,9 @@
+import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import cookieParser from 'cookie-parser';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import cookieParser from 'cookie-parser';
+import { AppModule } from './app.module';
+import { SocketIoAdapter } from './socket-io.adapter';
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
@@ -18,10 +20,13 @@ async function bootstrap() {
     app.setGlobalPrefix('api');
     app.enableCors({
         origin: process.env.FRONTEND_URL,
-        methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
         credentials: true,
     });
     app.use(cookieParser());
+    app.enableShutdownHooks();
+
+    const configService = app.get(ConfigService);
+    app.useWebSocketAdapter(new SocketIoAdapter(app, configService));
 
     await app.startAllMicroservices()
     await app.listen(process.env.PORT ?? 3000);

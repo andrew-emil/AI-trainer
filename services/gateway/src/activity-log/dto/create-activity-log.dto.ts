@@ -1,6 +1,5 @@
-import { ActivityType } from "@prisma/client";
-import type { JsonValue } from "@prisma/client/runtime/client";
 import { IsString, IsEnum, IsOptional, IsUUID, IsNotEmpty } from "class-validator";
+import { ActivityType } from "src/common/enums/entities.enum";
 
 export class CreateActivityLogDto {
     @IsNotEmpty()
@@ -20,5 +19,5 @@ export class CreateActivityLogDto {
     description?: string;
 
     @IsOptional()
-    metadata?: JsonValue;
+    metadata?: Record<string, unknown>;
 }
