@@ -34,32 +34,6 @@ export class SocketIoAdapter extends IoAdapter {
         const jwtService = this.app.get(JwtService);
         const server: Server = super.createIOServer(port, optionsWithCORS);
 
-        const verifyRoleMiddleware =
-            (jwtService: JwtService) =>
-                (socket: SocketWithAuth, next: NextFunction) => {
-                    const token: string | null =
-                        socket.handshake?.auth?.token ||
-                        socket.handshake?.query?.token ||
-                        this.extractBearerToken(socket.handshake?.headers?.authorization);
-
-                    if (!token) {
-                        next(new Error('FORBIDDEN'));
-                        return;
-                    }
-
-                    try {
-                        const payload = jwtService.verify<AuthPayloadDto>(token);
-
-                        if (payload.role !== UserRole.TRAINER && payload.role !== UserRole.ADMIN)
-                            next(new Error('FORBIDDEN'));
-
-                        socket.data.user = payload;
-                        next();
-                    } catch {
-                        next(new Error('FORBIDDEN'));
-                    }
-                };
-
         const verifyJwtMiddleware =
             (jwtService: JwtService) =>
                 (socket: SocketWithAuth, next: NextFunction) => {
@@ -82,7 +56,6 @@ export class SocketIoAdapter extends IoAdapter {
                     }
                 };
 
-        server.of('/chatbot').use(verifyRoleMiddleware(jwtService));
         server.of('/notifications').use(verifyJwtMiddleware(jwtService));
         server.of('/chat').use(verifyJwtMiddleware(jwtService));
 

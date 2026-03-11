@@ -1,35 +1,36 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
+import { BodyPartPattern } from 'src/common/patterns/body-part.pattern';
 import { BodyPartsService } from './body-parts.service';
 import { CreateBodyPartDto } from './dto/create-body-part.dto';
-import { UpdateBodyPartDto } from './dto/update-body-part.dto';
 
 @Controller()
 export class BodyPartsController {
-  constructor(private readonly bodyPartsService: BodyPartsService) {}
+  constructor(private readonly bodyPartsService: BodyPartsService) { }
 
-  @MessagePattern('createBodyPart')
+  @MessagePattern(BodyPartPattern.CREATE_BODY_PART)
   create(@Payload() createBodyPartDto: CreateBodyPartDto) {
     return this.bodyPartsService.create(createBodyPartDto);
   }
 
-  @MessagePattern('findAllBodyParts')
+  @MessagePattern(BodyPartPattern.FIND_ALL_BODY_PARTS)
   findAll() {
     return this.bodyPartsService.findAll();
   }
 
-  @MessagePattern('findOneBodyPart')
-  findOne(@Payload() id: number) {
+  @MessagePattern(BodyPartPattern.FIND_ONE_BODY_PART)
+  findOne(@Payload() { id }: { id: string }) {
     return this.bodyPartsService.findOne(id);
   }
 
-  @MessagePattern('updateBodyPart')
-  update(@Payload() updateBodyPartDto: UpdateBodyPartDto) {
-    return this.bodyPartsService.update(updateBodyPartDto.id, updateBodyPartDto);
+  @MessagePattern(BodyPartPattern.FIND_BY_NAME_BODY_PART)
+  findByName(@Payload() { name }: { name: string }) {
+    console.log(name)
+    return this.bodyPartsService.findByName(name);
   }
 
-  @MessagePattern('removeBodyPart')
-  remove(@Payload() id: number) {
+  @MessagePattern(BodyPartPattern.REMOVE_BODY_PART)
+  remove(@Payload() { id }: { id: string }) {
     return this.bodyPartsService.remove(id);
   }
 }
