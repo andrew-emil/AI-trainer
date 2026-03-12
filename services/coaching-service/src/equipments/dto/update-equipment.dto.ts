@@ -1,6 +1,9 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateEquipmentDto } from './create-equipment.dto';
+import { IsNotEmpty, IsUUID } from 'class-validator';
 
 export class UpdateEquipmentDto extends PartialType(CreateEquipmentDto) {
-  id: number;
+  @IsUUID()
+  @IsNotEmpty()
+  id: string;
 }

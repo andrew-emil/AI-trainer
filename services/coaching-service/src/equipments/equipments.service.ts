@@ -1,26 +1,66 @@
 import { Injectable } from '@nestjs/common';
 import { CreateEquipmentDto } from './dto/create-equipment.dto';
 import { UpdateEquipmentDto } from './dto/update-equipment.dto';
+import { PrismaService } from 'src/common/prisma/prisma.service';
+import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class EquipmentsService {
-  create(createEquipmentDto: CreateEquipmentDto) {
-    return 'This action adds a new equipment';
+  constructor(private readonly prisma: PrismaService) { }
+
+  async create(createEquipmentDto: CreateEquipmentDto) {
+    return await this.prisma.equipment.create({
+      data: {
+        name: createEquipmentDto.name,
+      },
+    });
   }
 
-  findAll() {
-    return `This action returns all equipments`;
+  async findAll() {
+    return await this.prisma.equipment.findMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} equipment`;
+  async findOne(id: string) {
+    const equipment = await this.prisma.equipment.findUnique({
+      where: { id },
+    });
+
+    if (!equipment) {
+      throw new RpcException({
+        status: 404,
+        message: 'Equipment not found',
+      });
+    }
+
+    return equipment;
   }
 
-  update(id: number, updateEquipmentDto: UpdateEquipmentDto) {
-    return `This action updates a #${id} equipment`;
+  async findByName(name: string) {
+    return this.prisma.equipment.findMany({
+      where: {
+        name: {
+          contains: name,
+          mode: 'insensitive',
+        },
+      },
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} equipment`;
+  async update(id: string, updateEquipmentDto: UpdateEquipmentDto) {
+    await this.findOne(id);
+    return this.prisma.equipment.update({
+      where: { id },
+      data: {
+        name: updateEquipmentDto.name,
+      },
+    });
+  }
+
+  async remove(id: string) {
+    await this.findOne(id);
+
+    return await this.prisma.equipment.delete({
+      where: { id },
+    });
   }
 }
