@@ -33,6 +33,7 @@ export class AuthService {
 
     async validateUser(email: string, password: string) {
         const user = await this.userService.findByEmail(email);
+        console.log(user)
         if (!user)
             throw new RpcException({
                 status: 401,
@@ -43,6 +44,7 @@ export class AuthService {
             password,
             user.passwordHash,
         );
+        console.log(isPasswordValid)
         if (!isPasswordValid)
             throw new RpcException({
                 status: 401,

@@ -27,8 +27,8 @@ const Login = () => {
   const navigate = useNavigate();
   const actionData = useActionData<string | ErrorResponse>();
   const { t } = useTranslation();
-  const { state } = useNavigation();
   const [showPassword, setShowPassword] = useState(false);
+  const { state } = useNavigation();
   const isLoading = state === 'submitting' || state === 'loading';
 
   const { refresh } = useAuth();

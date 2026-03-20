@@ -20,6 +20,7 @@ import { RabbitMQClientModule } from './rabbitmq-client/rabbitmq-client.module';
 import { TraineeModule } from './trainee/trainee.module';
 import { TrainerModule } from './trainer/trainer.module';
 import { UserModule } from './user/user.module';
+import { ExercisesModule } from './exercises/exercises.module';
 
 @Module({
   imports: [
@@ -43,7 +44,8 @@ import { UserModule } from './user/user.module';
     ActivityLogModule,
     BodyPartModule,
     BodyWeightLogsModule,
-    EquipmentsModule
+    EquipmentsModule,
+    ExercisesModule
   ],
   controllers: [AppController],
   providers: [
