@@ -30,7 +30,7 @@ model TraineeNutritionPlan {
     endDate         DateTime?
     active          Boolean   @default(true)
 
-      nutritionPlan   NutritionPlan @relation(fields: [nutritionPlanId], references: [id], onDelete: Cascade)
+    nutritionPlan NutritionPlan @relation(fields: [nutritionPlanId], references: [id], onDelete: Cascade)
 
     @@unique([traineeId, nutritionPlanId])
     @@index([traineeId])

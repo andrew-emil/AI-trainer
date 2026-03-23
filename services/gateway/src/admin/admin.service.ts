@@ -41,6 +41,8 @@ export class AdminService {
         const loginLink = `${frontend}/login`
         this.mailsService.
             handleTrainerApprove({ email: user.email, userName: user.username, loginLink })
+
+        return { message: "Trainer Account Approved Successfully" }
     }
 
     async rejectTrainerRequest(id: string, adminNote?: string) {
@@ -59,6 +61,8 @@ export class AdminService {
             reapplyLink: registerLink
         }
         this.mailsService.handleTrainerReject(trainerRejectDto)
+
+        return { message: "Trainer Account Rejected Successfully" }
     }
 
     deleteTrainerRequest(id: string) {

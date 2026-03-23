@@ -11,6 +11,16 @@ export class TrainerConversionUtil {
   }
 
   /**
+   * Converts years of experience (number) to a Date
+   * Example: 4 years in 2026 -> Date('2022-01-01')
+   */
+  static convertYearsToDate(years: number): Date {
+    const currentYear = new Date().getFullYear();
+    const targetYear = currentYear - years;
+    return new Date(targetYear, 0, 1); // January 1st of target year
+  }
+
+  /**
    * Safely transforms a trainer object in-place or returns a transformed copy.
    * Converts experienceYears from Date to number.
    */

@@ -29,4 +29,9 @@ export class TraineeController {
     remove(@Payload() { id }: { id: string }) {
         this.traineeService.delete(id);
     }
+
+    @MessagePattern(TraineePatterns.FIND_TRAINEES_GOALS)
+    findTraineesGoals(@Payload() { traineeIds }: { traineeIds: string[] }) {
+        return this.traineeService.findTraineesGoals(traineeIds);
+    }
 }

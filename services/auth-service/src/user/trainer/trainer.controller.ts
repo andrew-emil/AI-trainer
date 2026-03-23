@@ -30,4 +30,9 @@ export class TrainerController {
     getAllActive() {
         return this.trainerService.findAll(true);
     }
+
+    @MessagePattern(TrainerPattern.GET_BY_ID)
+    getOne(@Payload() { userId }: { userId: string }) {
+        return this.trainerService.findOne(userId);
+    }
 }

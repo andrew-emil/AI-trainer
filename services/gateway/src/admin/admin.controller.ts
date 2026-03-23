@@ -1,9 +1,9 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, UseGuards } from '@nestjs/common';
-import { AdminService } from './admin.service';
+import { Roles } from 'src/auth/decorators/roles.decorator';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { Roles } from 'src/auth/decorators/roles.decorator';
 import { UserRole } from 'src/common/enums/entities.enum';
+import { AdminService } from './admin.service';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.ADMIN)
@@ -22,15 +22,15 @@ export class AdminController {
   }
 
   @Patch('trainer-requests/:id/approve')
+  @HttpCode(HttpStatus.OK)
   async approveTrainerRequest(@Param('id') id: string) {
-    await this.adminService.approveTrainerRequest(id)
-    return { message: "Trainer Account Approved Successfully"}
+    return this.adminService.approveTrainerRequest(id)
   }
 
   @Patch('trainer-requests/:id/reject')
+  @HttpCode(HttpStatus.OK)
   async rejectTrainerRequest(@Param('id') id: string, @Body('adminNote') adminNote?: string) {
-    await this.adminService.rejectTrainerRequest(id, adminNote)
-    return { message: "Trainer Account Rejected Successfully" }
+    return this.adminService.rejectTrainerRequest(id, adminNote)
   }
 
   @Delete('trainer-requests/:id')

@@ -9,6 +9,8 @@ import { ExercisesModule } from './exercises/exercises.module';
 import { MusclesModule } from './muscles/muscles.module';
 import { NutritionPlansModule } from './nutrition-plans/nutrition-plans.module';
 import { NutritionModule } from './nutrition/nutrition.module';
+import { RabbitMQClientModule } from './rabbitmq-client/rabbitmq-client.module';
+import { TrainerMetricsModule } from './trainer-metrics/trainer-metrics.module';
 import { WorkoutLogsModule } from './workout-logs/workout-logs.module';
 import { WorkoutPlansModule } from './workout-plans/workout-plans.module';
 
@@ -24,7 +26,9 @@ import { WorkoutPlansModule } from './workout-plans/workout-plans.module';
     NutritionPlansModule,
     WorkoutLogsModule,
     WorkoutPlansModule,
-    PrismaModule
+    PrismaModule,
+    TrainerMetricsModule,
+    RabbitMQClientModule
   ],
   providers: [
     {

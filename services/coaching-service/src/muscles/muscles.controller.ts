@@ -1,35 +1,24 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
+import { MusclePatterns } from 'src/common/patterns/muscles.patterns';
 import { MusclesService } from './muscles.service';
-import { CreateMuscleDto } from './dto/create-muscle.dto';
-import { UpdateMuscleDto } from './dto/update-muscle.dto';
 
 @Controller()
 export class MusclesController {
   constructor(private readonly musclesService: MusclesService) {}
 
-  @MessagePattern('createMuscle')
-  create(@Payload() createMuscleDto: CreateMuscleDto) {
-    return this.musclesService.create(createMuscleDto);
+  @MessagePattern(MusclePatterns.FIND_BY_NAME)
+  findByName(@Payload() { name }: { name: string }) {
+    return this.musclesService.findByName(name);
   }
 
-  @MessagePattern('findAllMuscles')
+  @MessagePattern(MusclePatterns.FIND_ALL)
   findAll() {
     return this.musclesService.findAll();
   }
 
-  @MessagePattern('findOneMuscle')
-  findOne(@Payload() id: number) {
+  @MessagePattern(MusclePatterns.FIND_ONE)
+  findOne(@Payload() { id }: { id: string }) {
     return this.musclesService.findOne(id);
-  }
-
-  @MessagePattern('updateMuscle')
-  update(@Payload() updateMuscleDto: UpdateMuscleDto) {
-    return this.musclesService.update(updateMuscleDto.id, updateMuscleDto);
-  }
-
-  @MessagePattern('removeMuscle')
-  remove(@Payload() id: number) {
-    return this.musclesService.remove(id);
   }
 }
