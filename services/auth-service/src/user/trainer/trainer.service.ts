@@ -7,6 +7,9 @@ import { CreateTrainerDto } from './dto/create-trainer.dto';
 import { CreatedTrainer } from './dto/createdTrainer.dto';
 import { UpdateTrainerDto } from './dto/update-trainer.dto';
 import { UserService } from '../user.service';
+import { Trainer } from '@prisma/client';
+
+type TrainerProfile = Omit<Trainer, 'experienceYears'> & { experienceYears: number };
 
 @Injectable()
 export class TrainerService {
@@ -16,16 +19,6 @@ export class TrainerService {
         private readonly userService: UserService,
     ) { }
 
-    /**
-   * Converts years of experience (number) to a Date
-   * Example: 4 years in 2026 -> Date('2022-01-01')
-   */
-    private convertYearsToDate(years: number): Date {
-        const currentYear = new Date().getFullYear();
-        const targetYear = currentYear - years;
-        return new Date(targetYear, 0, 1); // January 1st of target year
-    }
-
     async create(dto: CreateTrainerDto) {
         const { userId, bio, experienceYears, certifications, transformations } =
             dto;
@@ -34,7 +27,7 @@ export class TrainerService {
             data: {
                 userId,
                 bio,
-                experienceYears: this.convertYearsToDate(experienceYears),
+                experienceYears: TrainerConversionUtil.convertYearsToDate(experienceYears),
                 transformations: transformations
                     ? {
                         create: transformations.map((t) => ({
@@ -74,13 +67,17 @@ export class TrainerService {
         });
     }
 
-    async findOne(id: string) {
+    async findOne(id: string): Promise<TrainerProfile> {
         const trainer = await this.prisma.trainer.findUnique({ where: { userId: id } });
         if (!trainer) throw new RpcException({
             status: 404,
             message: "Trainer not found",
         });
-        return trainer;
+
+        return {
+            ...trainer,
+            experienceYears: TrainerConversionUtil.convertDateToYears(trainer.experienceYears)
+        };
     }
 
     async update(id: string, dto: UpdateTrainerDto) {
@@ -130,7 +127,7 @@ export class TrainerService {
         // Convert experienceYears from number to Date if provided
         const experienceYearsDate =
             experienceYears !== undefined
-                ? this.convertYearsToDate(experienceYears)
+                ? TrainerConversionUtil.convertYearsToDate(experienceYears)
                 : undefined;
 
         // 3) Update DB

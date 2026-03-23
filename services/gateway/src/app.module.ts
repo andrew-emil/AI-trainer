@@ -21,6 +21,10 @@ import { TraineeModule } from './trainee/trainee.module';
 import { TrainerModule } from './trainer/trainer.module';
 import { UserModule } from './user/user.module';
 import { ExercisesModule } from './exercises/exercises.module';
+import { MusclesModule } from './muscles/muscles.module';
+import { NutritionModule } from './nutrition/nutrition.module';
+import { NutritionPlanModule } from './nutrition-plan/nutrition-plan.module';
+import { WorkoutLogsModule } from './workout-logs/workout-logs.module';
 
 @Module({
   imports: [
@@ -45,7 +49,11 @@ import { ExercisesModule } from './exercises/exercises.module';
     BodyPartModule,
     BodyWeightLogsModule,
     EquipmentsModule,
-    ExercisesModule
+    ExercisesModule,
+    MusclesModule,
+    NutritionModule,
+    NutritionPlanModule,
+    WorkoutLogsModule
   ],
   controllers: [AppController],
   providers: [

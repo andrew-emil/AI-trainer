@@ -1,26 +1,28 @@
 import { Injectable } from '@nestjs/common';
-import { CreateMuscleDto } from './dto/create-muscle.dto';
-import { UpdateMuscleDto } from './dto/update-muscle.dto';
+import { PrismaService } from 'src/common/prisma/prisma.service';
 
 @Injectable()
 export class MusclesService {
-  create(createMuscleDto: CreateMuscleDto) {
-    return 'This action adds a new muscle';
-  }
+  constructor(private readonly prisma: PrismaService) { }
 
   findAll() {
-    return `This action returns all muscles`;
+    return this.prisma.muscle.findMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} muscle`;
+  findOne(id: string) {
+    return this.prisma.muscle.findUnique({
+      where: { id },
+    });
   }
 
-  update(id: number, updateMuscleDto: UpdateMuscleDto) {
-    return `This action updates a #${id} muscle`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} muscle`;
+  findByName(name: string) {
+    return this.prisma.muscle.findMany({
+      where: {
+        name: {
+          contains: name,
+          mode: 'insensitive',
+        },
+      },
+    });
   }
 }
