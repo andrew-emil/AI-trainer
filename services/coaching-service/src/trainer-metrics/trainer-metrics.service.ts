@@ -149,7 +149,7 @@ export class TrainerMetricsService {
         }
     }
 
-    private async getTrainerById(id: string): Promise<Trainer> {
+    async getTrainerById(id: string): Promise<Trainer> {
         return rpcCall<Trainer>(this.authClient, TrainerPattern.GET_BY_ID, { id }, TrainerContract);
     }
 }

@@ -13,6 +13,7 @@ import { RabbitMQClientModule } from './rabbitmq-client/rabbitmq-client.module';
 import { TrainerMetricsModule } from './trainer-metrics/trainer-metrics.module';
 import { WorkoutLogsModule } from './workout-logs/workout-logs.module';
 import { WorkoutPlansModule } from './workout-plans/workout-plans.module';
+import { ReviewsModule } from './reviews/reviews.module';
 
 @Module({
   imports: [
@@ -28,7 +29,8 @@ import { WorkoutPlansModule } from './workout-plans/workout-plans.module';
     WorkoutPlansModule,
     PrismaModule,
     TrainerMetricsModule,
-    RabbitMQClientModule
+    RabbitMQClientModule,
+    ReviewsModule
   ],
   providers: [
     {
