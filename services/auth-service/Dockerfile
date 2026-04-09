@@ -1,12 +1,16 @@
-FROM node:25.6-alpine3.22
+FROM node:22-alpine3.21
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
+# Install wget for healthcheck (curl not in alpine)
+RUN apk add --no-cache wget
+
+COPY package*.json ./
 RUN npm install --legacy-peer-deps
 
 COPY . .
 
-EXPOSE 3000
+# Build-time: generate Prisma client
+RUN npx prisma generate
 
 CMD ["npm", "run", "start:dev"]

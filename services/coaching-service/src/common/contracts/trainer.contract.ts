@@ -17,3 +17,5 @@ export type Trainer = z.infer<typeof TrainerContract>
 export const TrainerWithUserContract = TrainerContract.extend({
     user: UserContract
 })
+
+export type TrainerWithUserContractType = z.infer<typeof TrainerWithUserContract>

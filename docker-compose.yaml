@@ -1,39 +1,4 @@
 services:
-  # ----------------- Databases -----------------
-  postgres:
-    image: postgres:17-alpine
-    container_name: postgres_db
-    environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin123
-    ports:
-      - "5433:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    networks:
-      - trainer_net
-
-  mongo:
-    image: mongo:7
-    container_name: mongo_db
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodata:/data/db
-    networks:
-      - trainer_net
-  # ----------------- Redis ---------------------------
-  # redis:
-  #  image: redis:7
-  # container_name: redis
-  #ports:
-  # - "6379:6379"
-  #command: ["redis-server", "--appendonly", "yes"]
-  #volumes:
-  #  - redis_data:/data
-  #networks:
-  # - trainer_net
-
   # ----------------- RabbitMQ -----------------
   rabbitmq:
     image: rabbitmq:3-management
@@ -81,8 +46,6 @@ services:
     env_file:
       - ./services/auth-service/.env
     depends_on:
-      postgres:
-        condition: service_started
       rabbitmq:
         condition: service_healthy
     ports:
@@ -108,8 +71,6 @@ services:
     env_file:
       - ./services/interaction-service/.env
     depends_on:
-      mongo:
-        condition: service_started
       rabbitmq:
         condition: service_healthy
     ports:
@@ -132,8 +93,6 @@ services:
     env_file:
       - ./services/coaching-service/.env
     depends_on:
-      postgres:
-        condition: service_started
       rabbitmq:
         condition: service_healthy
     ports:
@@ -156,7 +115,4 @@ networks:
     driver: bridge
 
 volumes:
-  pgdata:
-  mongodata:
   rabbitmq_data:
-  # redis_data:

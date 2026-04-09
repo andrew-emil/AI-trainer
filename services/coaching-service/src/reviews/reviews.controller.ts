@@ -34,4 +34,9 @@ export class ReviewsController {
   ) {
     return this.reviewsService.deleteReview(payload.reviewId, payload.traineeId);
   }
+
+  @MessagePattern(ReviewPattern.GET_FOR_TRAINER)
+  getReviewsForTrainer(@Payload() payload: { trainerId: string }) {
+    return this.reviewsService.getReviewsForTrainer(payload.trainerId);
+  }
 }

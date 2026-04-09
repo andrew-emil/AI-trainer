@@ -13,8 +13,8 @@ import { RabbitProducerService } from './rabbit-producer.service';
         useFactory: async (configService: ConfigService) => ({
           transport: Transport.RMQ,
           options: {
-            urls: [configService.getOrThrow<string>('rabbit.url')],
-            queue: configService.getOrThrow<string>('rabbit.coachDomainQueue'),
+            urls: [configService.get<string>('rabbit.url')!],
+            queue: configService.get<string>('rabbit.coachDomainQueue'),
             queueOptions: {
               durable: false,
             },
@@ -29,8 +29,8 @@ import { RabbitProducerService } from './rabbit-producer.service';
         useFactory: async (configService: ConfigService) => ({
           transport: Transport.RMQ,
           options: {
-            urls: [configService.getOrThrow<string>('rabbit.url')],
-            queue: configService.getOrThrow<string>('rabbit.interactionQueue'),
+            urls: [configService.get<string>('rabbit.url')!],
+            queue: configService.get<string>('rabbit.interactionQueue'),
             queueOptions: {
               durable: false,
             },

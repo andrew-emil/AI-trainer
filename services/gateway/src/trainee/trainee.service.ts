@@ -7,6 +7,8 @@ import { TraineePatterns } from 'src/common/patterns/traineePatterns.enum';
 import { CreateTrainerReviewDto } from './dto/create-trainer-review.dto';
 import { UpdateTrainerReviewDto } from './dto/update-trainer-review.dto';
 import { ReviewPattern } from 'src/common/patterns/reviews.patterns';
+import { CreateTrainerRequestDto } from './dto/create-trainer-request.dto';
+import { TraineeEnrollmentPattern } from 'src/common/patterns/trainee-enrollment.pattern';
 
 @Injectable()
 export class TraineeService {
@@ -64,5 +66,30 @@ export class TraineeService {
     return firstValueFrom(
       this.coachClient.send(ReviewPattern.DELETE, { reviewId, traineeId })
     );
+  }
+
+  // ---------- Assigned trainers & plans ----------
+  async createTrainerRequest(dto: CreateTrainerRequestDto) {
+    return firstValueFrom(
+      this.coachClient.send(TraineeEnrollmentPattern.CREATE_REQUEST, dto)
+    );
+  }
+
+  async getAssignedTrainers(traineeId: string) {
+    return firstValueFrom(
+      this.coachClient.send(TraineeEnrollmentPattern.GET_ASSIGNED_TRAINERS, { traineeId })
+    )
+  }
+
+  async getAssignedWorkoutPlans(traineeId: string) {
+    return firstValueFrom(
+      this.coachClient.send(TraineeEnrollmentPattern.GET_ASSIGNED_WORKOUT_PLANS, { traineeId })
+    )
+  }
+
+  async getAssignedNutritionPlans(traineeId: string) {
+    return firstValueFrom(
+      this.coachClient.send(TraineeEnrollmentPattern.GET_ASSIGNED_NUTRITION_PLANS, { traineeId })
+    )
   }
 }

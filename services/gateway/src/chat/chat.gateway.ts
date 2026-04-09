@@ -1,10 +1,10 @@
 import { ConnectedSocket, MessageBody, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Server } from 'socket.io';
+import { UserSnapshot } from 'src/common/types/userSnapshot.type';
 import type { SocketWithAuth } from 'src/socket-io.adapter';
+import { UserService } from 'src/user/user.service';
 import { ChatService } from './chat.service';
 import { SendMessageDto } from './dto/sendMessage.dto';
-import { UserService } from 'src/user/user.service';
-import { UserSnapshot } from 'src/common/types/userSnapshot.type';
 
 @WebSocketGateway({
   namespace: '/chat',

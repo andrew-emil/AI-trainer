@@ -1,14 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { AUTH_SERVICE, INTERACTION_SERVICE } from 'src/common/constants/clientModuleNames';
-import { TraineeWithUserContract } from 'src/common/contracts/trainee.contract';
-import { TrainerWithUserContract } from 'src/common/contracts/trainer.contract';
 import { CreateNotificationDto } from 'src/common/dto/create-notification.dto';
 import { NotificationType } from 'src/common/enum/notification-type';
 import { NotificationPattern } from 'src/common/patterns/notification.pattern';
-import { TraineePatterns } from 'src/common/patterns/trainee.pattern';
-import { TrainerPattern } from 'src/common/patterns/trainer.patterns';
-import { rpcCall } from 'src/common/utils/rpc-call.helper';
+import { getTraineeWithUser, getTrainerWithUser } from 'src/common/utils/get-user.helper';
 import { TrainerMetricsService } from 'src/trainer-metrics/trainer-metrics.service';
 
 @Injectable()
@@ -103,18 +99,8 @@ export class WorkoutLogsHelper {
 
     private async sendExpirationNotifications(traineeId: string, trainerId: string) {
         const [trainee, trainer] = await Promise.all([
-            rpcCall(
-                this.authService,
-                TraineePatterns.FIND_ONE,
-                { id: traineeId },
-                TraineeWithUserContract
-            ),
-            rpcCall(
-                this.authService,
-                TrainerPattern.GET_BY_ID,
-                { id: trainerId },
-                TrainerWithUserContract
-            )
+            getTraineeWithUser(this.authService, traineeId),
+            getTrainerWithUser(this.authService, trainerId)
         ]);
 
         const payloads: CreateNotificationDto[] = [

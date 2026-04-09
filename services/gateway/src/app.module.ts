@@ -1,6 +1,8 @@
 import { Module, ValidationPipe } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_FILTER, APP_PIPE } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_PIPE } from '@nestjs/core';
+import { TerminusModule } from '@nestjs/terminus';
+import { seconds, ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import Joi from 'joi';
 import { ActivityLogModule } from './activity-log/activity-log.module';
 import { AdminModule } from './admin/admin.module';
@@ -14,17 +16,18 @@ import { RpcToHttpExceptionFilter } from './common/filters/rpc-to-http-exception
 import jwtConfig, { jwtSchema } from './config/jwt.config';
 import rabbitConfig, { rabbitSchema } from './config/rabbit.config';
 import { EquipmentsModule } from './equipments/equipments.module';
+import { ExercisesModule } from './exercises/exercises.module';
 import { MailsModule } from './mails/mails.module';
+import { MusclesModule } from './muscles/muscles.module';
 import { NotificationModule } from './notification/notification.module';
+import { NutritionPlanModule } from './nutrition-plan/nutrition-plan.module';
+import { NutritionModule } from './nutrition/nutrition.module';
 import { RabbitMQClientModule } from './rabbitmq-client/rabbitmq-client.module';
 import { TraineeModule } from './trainee/trainee.module';
 import { TrainerModule } from './trainer/trainer.module';
 import { UserModule } from './user/user.module';
-import { ExercisesModule } from './exercises/exercises.module';
-import { MusclesModule } from './muscles/muscles.module';
-import { NutritionModule } from './nutrition/nutrition.module';
-import { NutritionPlanModule } from './nutrition-plan/nutrition-plan.module';
 import { WorkoutLogsModule } from './workout-logs/workout-logs.module';
+import { WorkoutPlansModule } from './workout-plans/workout-plans.module';
 
 @Module({
   imports: [
@@ -36,6 +39,22 @@ import { WorkoutLogsModule } from './workout-logs/workout-logs.module';
         .concat(jwtSchema),
       load: [rabbitConfig, jwtConfig],
     }),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          name: 'global',
+          ttl: seconds(60),
+          limit: 100,
+        },
+        {
+          name: 'auth',
+          ttl: seconds(60),
+          limit: 1000, // effectively inactive globally
+        },
+      ],
+      errorMessage: 'Too many requests, please try again later.',
+    }),
+    TerminusModule,
     UserModule,
     TrainerModule,
     TraineeModule,
@@ -53,7 +72,8 @@ import { WorkoutLogsModule } from './workout-logs/workout-logs.module';
     MusclesModule,
     NutritionModule,
     NutritionPlanModule,
-    WorkoutLogsModule
+    WorkoutLogsModule,
+    WorkoutPlansModule
   ],
   controllers: [AppController],
   providers: [
@@ -69,6 +89,10 @@ import { WorkoutLogsModule } from './workout-logs/workout-logs.module';
           enableImplicitConversion: true,
         },
       })
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard
     }
   ],
 })

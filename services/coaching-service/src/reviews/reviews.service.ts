@@ -5,6 +5,7 @@ import { AUTH_SERVICE } from 'src/common/constants/clientModuleNames';
 import { TrainerPattern } from 'src/common/patterns/trainer.patterns';
 import { PrismaService } from 'src/common/prisma/prisma.service';
 import { TrainerConversionUtil } from 'src/common/utils/trainer-conversion.util';
+import { getTraineeWithUser, getTrainer } from 'src/common/utils/get-user.helper';
 import { TrainerMetricsService } from 'src/trainer-metrics/trainer-metrics.service';
 import { CreateTrainerReviewDto } from './dto/create-trainer-review.dto';
 import { UpdateTrainerReviewDto } from './dto/update-trainer-review.dto';
@@ -94,6 +95,20 @@ export class ReviewsService {
     return { message: "Review deleted successfully" };
   }
 
+  async getReviewsForTrainer(trainerId: string) {
+    const reviews = await this.prisma.trainerReview.findMany({
+      where: { trainerId },
+    });
+    const reviewWithTrainee = await Promise.all(reviews.map(async (r) => {
+      const trainee = await getTraineeWithUser(this.authService, r.traineeId);
+      return {
+        ...r,
+        trainee: trainee,
+      };
+    }));
+    return reviewWithTrainee;
+  }
+
   private async updateTrainerRatingAndRank(trainerId: string) {
     const stats = await this.prisma.trainerReview.aggregate({
       where: { trainerId },
@@ -101,7 +116,7 @@ export class ReviewsService {
       _count: { rating: true },
     });
 
-    const currentTrainer = await this.trainerMetricsService.getTrainerById(trainerId);
+    const currentTrainer = await getTrainer(this.authService, trainerId);
     const newRatingAvg = stats._avg.rating ?? 0;
     const newRatingCount = stats._count.rating;
 
