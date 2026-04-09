@@ -1,5 +1,10 @@
 import { IsEnum, IsInt, IsNotEmpty, IsString } from 'class-validator'
-import { TraineeGoal } from '@prisma/client'
+export enum TraineeGoal {
+  LOSE_WEIGHT = 'LOSE_WEIGHT',
+  MAINTAIN_WEIGHT = 'MAINTAIN_WEIGHT',
+  BUILD_MUSCLE = 'BUILD_MUSCLE',
+  IMPROVE_FITNESS = 'IMPROVE_FITNESS'
+}
 
 export class CreateNutritionPlanDto {
 

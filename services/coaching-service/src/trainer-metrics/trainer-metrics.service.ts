@@ -4,10 +4,10 @@ import { BodyWeightLog, membershipStatus, Prisma, TraineeGoal } from '@prisma/cl
 import { firstValueFrom } from 'rxjs';
 import { AUTH_SERVICE } from 'src/common/constants/clientModuleNames';
 import { TraineeContract } from 'src/common/contracts/trainee.contract';
-import { Trainer, TrainerContract } from 'src/common/contracts/trainer.contract';
 import { TraineePatterns } from 'src/common/patterns/trainee.pattern';
 import { TrainerPattern } from 'src/common/patterns/trainer.patterns';
 import { PrismaService } from 'src/common/prisma/prisma.service';
+import { getTrainer } from 'src/common/utils/get-user.helper';
 import { rpcCall } from 'src/common/utils/rpc-call.helper';
 
 @Injectable()
@@ -20,7 +20,7 @@ export class TrainerMetricsService {
 
     async calculateRankScore(trainerId: string, tx?: Prisma.TransactionClient) {
         const prisma = tx || this.prisma;
-        const trainer = await this.getTrainerById(trainerId);
+        const trainer = await getTrainer(this.authClient, trainerId);
         const trainerMetrics = await prisma.trainerMetrics.findUnique({
             where: {
                 trainerId,
@@ -147,9 +147,5 @@ export class TrainerMetricsService {
             default:
                 return false;
         }
-    }
-
-    async getTrainerById(id: string): Promise<Trainer> {
-        return rpcCall<Trainer>(this.authClient, TrainerPattern.GET_BY_ID, { id }, TrainerContract);
     }
 }

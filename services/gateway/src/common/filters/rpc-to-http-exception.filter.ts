@@ -82,6 +82,8 @@ function genericMessageForStatus(status: number) {
     case 401: return 'Unauthorized';
     case 403: return 'Forbidden';
     case 404: return 'Not found';
+    case 409: return 'Conflict';
+    case 400: return 'Bad request';
     default: return 'Internal server error';
   }
 }
@@ -92,7 +94,7 @@ function serializeErrorForLog(exception: any) {
     return {
       name: exception?.name,
       message: exception?.message,
-      statusCode: exception?.statusCode,
+      statusCode: exception?.statusCode || exception?.code || exception?.status ,
       stack: exception?.stack,
       payload: exception?.error ?? exception,
     };

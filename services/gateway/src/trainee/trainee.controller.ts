@@ -12,7 +12,7 @@ import { UpdateTrainerReviewDto } from './dto/update-trainer-review.dto';
 @UseGuards(JwtAuthGuard)
 @Controller('trainee')
 export class TraineeController {
-  constructor(private readonly traineeService: TraineeService) {}
+  constructor(private readonly traineeService: TraineeService) { }
 
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
@@ -68,4 +68,34 @@ export class TraineeController {
     return this.traineeService.deleteReview(reviewId, req.user.sub);
   }
 
+  // ---------- Assigned trainers & plans ----------
+  @Get("assigned-trainer")
+  getAssignedTrainers(@Req() req: CustomRequest) {
+    return this.traineeService.getAssignedTrainers(req.user.sub);
+  }
+
+  @Get("assigned-workout-plans")
+  getAssignedWorkoutPlans(@Req() req: CustomRequest) {
+    return this.traineeService.getAssignedWorkoutPlans(req.user.sub);
+  }
+
+  @Get("assigned-nutrition-plans")
+  getAssignedNutritionPlans(@Req() req: CustomRequest) {
+    return this.traineeService.getAssignedNutritionPlans(
+      req.user.sub,
+    );
+  }
+
+  @Post("trainer-request/:trainerId")
+  createTrainerRequest(
+    @Param("trainerId") trainerId: string,
+    @Req() req: CustomRequest,
+    @Body("sessionsCount") sessionsCount: number,
+  ) {
+    return this.traineeService.createTrainerRequest({
+      traineeId: req.user.sub,
+      trainerId,
+      sessionsCount,
+    });
+  }
 }

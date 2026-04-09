@@ -10,13 +10,28 @@ import { MusclesModule } from './muscles/muscles.module';
 import { NutritionPlansModule } from './nutrition-plans/nutrition-plans.module';
 import { NutritionModule } from './nutrition/nutrition.module';
 import { RabbitMQClientModule } from './rabbitmq-client/rabbitmq-client.module';
+import { ReviewsModule } from './reviews/reviews.module';
+import { TraineeEnrollmentsModule } from './trainee-enrollments/trainee-enrollments.module';
 import { TrainerMetricsModule } from './trainer-metrics/trainer-metrics.module';
 import { WorkoutLogsModule } from './workout-logs/workout-logs.module';
 import { WorkoutPlansModule } from './workout-plans/workout-plans.module';
-import { ReviewsModule } from './reviews/reviews.module';
+
+import { ConfigModule } from '@nestjs/config';
+import Joi from 'joi';
+import rabbitConfig, { rabbitSchema } from './common/config/rabbit.config';
+import { NutritionPlanAssignmentModule } from './nutrition-plan-assignment/nutrition-plan-assignment.module';
+import { TrainerTraineesModule } from './trainer-trainees/trainer-trainees.module';
+import { WorkoutAssignmentModule } from './workout-assignment/workout-assignment.module';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+      validationSchema: Joi.object()
+        .concat(rabbitSchema),
+      load: [rabbitConfig],
+    }),
     ActivityLogModule,
     BodyPartsModule,
     BodyWeightLogsModule,
@@ -30,7 +45,11 @@ import { ReviewsModule } from './reviews/reviews.module';
     PrismaModule,
     TrainerMetricsModule,
     RabbitMQClientModule,
-    ReviewsModule
+    ReviewsModule,
+    TraineeEnrollmentsModule,
+    TrainerTraineesModule,
+    WorkoutAssignmentModule,
+    NutritionPlanAssignmentModule,
   ],
   providers: [
     {
