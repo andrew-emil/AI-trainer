@@ -1,4 +1,4 @@
-import { axiosClient } from '@/lib/axiosClient';
+import axiosClient from '@/lib/axiosClient';
 import { tryCatch } from '@/lib/try-catch';
 import { ConversationListItemDto, MessageWithSender } from '@/types/chat';
 import { Paginated } from '@/types/paginate';
