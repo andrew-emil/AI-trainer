@@ -1,4 +1,4 @@
-import { axiosClient } from '@/lib/axiosClient';
+import axiosClient from '@/lib/axiosClient';
 import { tryCatch } from '@/lib/try-catch';
 import { CreateUserDto, UpdateUserDto, SafeUser } from '@/types/user';
 
@@ -18,7 +18,7 @@ export const findAllUsers = async () => {
 
 export const getMyUser = async () => {
   const [{ data }, error] = await tryCatch(
-    axiosClient.get<SafeUser>('/user/me')
+    axiosClient.get<SafeUser>('/user/profile')
   );
   return { data, error };
 };

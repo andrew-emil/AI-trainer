@@ -1,4 +1,4 @@
-import { axiosClient } from '@/lib/axiosClient';
+import axiosClient from '@/lib/axiosClient';
 import { tryCatch } from '@/lib/try-catch';
 import { Notification } from '@/types/entities';
 import { Paginated } from '@/types/paginate';

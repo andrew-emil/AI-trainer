@@ -1,4 +1,4 @@
-import { axiosClient } from '@/lib/axiosClient';
+import axiosClient from '@/lib/axiosClient';
 import { tryCatch } from '@/lib/try-catch';
 import { Equipment } from '@/types/entities';
 

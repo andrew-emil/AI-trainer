@@ -1,4 +1,4 @@
-import { axiosClient } from '@/lib/axiosClient';
+import axiosClient from '@/lib/axiosClient';
 import { ActivityLog } from '@/types/entities';
 import { tryCatch } from '@/lib/try-catch';
 

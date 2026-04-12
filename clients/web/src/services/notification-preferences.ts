@@ -1,4 +1,4 @@
-import { axiosClient } from '@/lib/axiosClient';
+import axiosClient from '@/lib/axiosClient';
 import { tryCatch } from '@/lib/try-catch';
 import { NotificationPreference } from '@/types/entities';
 import { UpdateNotificationPreferenceDto } from '@/types/notifications';
