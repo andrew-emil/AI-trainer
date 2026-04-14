@@ -1,5 +1,6 @@
 export type ErrorResponse = {
-  message: string;
-  statusCode: number;
+  data: string;
+  status: number;
+  statusText: string;
   errors?: Record<string, string[]>;
 };

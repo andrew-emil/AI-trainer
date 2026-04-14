@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { AUTH_SERVICE } from 'src/common/constants/clientModuleNames';
@@ -12,18 +12,25 @@ import { ResetPasswordDto } from './dto/resetPassword.dto';
 
 @Injectable()
 export class AuthService {
+    private readonly logger = new Logger(AuthService.name);
+
     constructor(
         @Inject(AUTH_SERVICE)
         private readonly authClient: ClientProxy,
     ) { }
 
     login(loginDto: LoginDto) {
-        return rpcCall<AuthResponse>(
-            this.authClient,
-            AuthPatterns.login,
-            loginDto,
-            AuthResponseSchema,
-        )
+        try {
+            return rpcCall<AuthResponse>(
+                this.authClient,
+                AuthPatterns.login,
+                loginDto,
+                AuthResponseSchema,
+            )
+        } catch (error) {
+            this.logger.error(error);
+            throw error;
+        }
     }
 
     refresh(refreshToken: string) {
@@ -36,12 +43,17 @@ export class AuthService {
     }
 
     registerAsTrainee(registerDto: RegisterAsTraineeDto) {
-        return rpcCall<AuthResponse>(
-            this.authClient,
-            AuthPatterns.registerAsTrainee,
-            registerDto,
-            AuthResponseSchema,
-        )
+        try {
+            return rpcCall<AuthResponse>(
+                this.authClient,
+                AuthPatterns.registerAsTrainee,
+                registerDto,
+                AuthResponseSchema,
+            )
+        } catch (error) {
+            this.logger.error(error);
+            throw error;
+        }
     }
 
     registerAsTrainer(registerDto: RegisterAsTrainerDto) {

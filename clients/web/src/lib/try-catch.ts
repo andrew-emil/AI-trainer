@@ -13,6 +13,6 @@ export async function tryCatch<T, E extends ErrorResponse = ErrorResponse>(
         const result = await promise;
         return [result, null];
     } catch (error) {
-        return [{} as never, error?.response?.data as E];
+        return [{} as never, error?.response as E];
     }
 }

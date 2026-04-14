@@ -1,9 +1,8 @@
 import { motion } from 'framer-motion';
 import { ArrowRight, Crown, Dumbbell, LayoutDashboard } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
-import { tokenStore } from '@/store/tokenStore';
 import { UserRole } from '@/types/entities';
 import heroPharaoh from '@/assets/hero-pharaoh.jpg';
 import EgyptianDivider from '@/components/ui/EgyptianDivider';
@@ -11,7 +10,7 @@ import EgyptianDivider from '@/components/ui/EgyptianDivider';
 const HeroSection = () => {
   const { t } = useTranslation();
   const { auth } = useAuth();
-  const isTokenSet = tokenStore.isSet();
+  const isLoggedIn = !!auth?.user;
 
   function handleNavDashboard() {
     if (!auth || !auth.user) return '/dashboard';
@@ -95,7 +94,7 @@ const HeroSection = () => {
             transition={{ delay: 0.8 }}
             className="flex flex-col sm:flex-row gap-4 mb-12"
           >
-            {!isTokenSet ? (
+            {!isLoggedIn ? (
               <>
                 <Link
                   to="/register"

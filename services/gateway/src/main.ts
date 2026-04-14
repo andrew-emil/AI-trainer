@@ -13,7 +13,7 @@ async function bootstrap() {
             urls: [process.env.RABBITMQ_URL as string],
             queue: process.env.GATEWAY_QUEUE as string,
             queueOptions: {
-                durable: false,
+                durable: true,
             },
         },
     })

@@ -1,20 +1,16 @@
 import { ImageType, uploadImageToCloudinary } from '@/lib/cloudinary';
+import { registerAsTrainer } from '@/services/auth';
 import { CreateTransformationDto } from '@/types/auth';
 import { Gender, UserRole } from '@/types/entities';
-import { ErrorResponse } from '@/types/errorResponse';
 import { CreateTrainerDto } from '@/types/trainer';
 import { CreateUserDto } from '@/types/user';
 import { UserPlus, X } from 'lucide-react';
-import { Activity, useEffect, useState } from 'react';
+import { Activity, useState } from 'react';
 import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import {
-  useActionData,
-  useNavigate,
-  useNavigation,
-  useSubmit,
-} from 'react-router';
+import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
+import { useMutation } from '@tanstack/react-query';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 import UserForm from './UserForm';
@@ -77,22 +73,45 @@ function TrainerForm() {
     name: 'transformations',
   });
 
-  const { state } = useNavigation();
-  const isLoading = state === 'submitting' || state === 'loading';
   const navigate = useNavigate();
-  const submitForm = useSubmit();
-  const action = useActionData<{ message: string } | ErrorResponse>();
 
-  useEffect(() => {
-    if (!action) return;
-
-    if (typeof action === 'string') {
+  const { mutate, isPending } = useMutation({
+    mutationFn: (data: TrainerInputs) =>
+      registerAsTrainer({
+        firstName: data.firstName,
+        lastName: data.lastName,
+        username: data.username,
+        email: data.email,
+        password: data.password,
+        avatar: data.avatar,
+        avatarPublicId: data.avatarPublicId,
+        gender: data.gender,
+        bio: data.bio,
+        experienceYears: data.experienceYears,
+        certifications: data.certifications.map((c) => ({
+          name: c.name,
+          imageUrl: c.imageUrl,
+          imagePublicId: c.imagePublicId,
+        })),
+        transformations: data.transformations.map((t) => ({
+          imageUrl: t.imageUrl,
+          imagePublicId: t.imagePublicId,
+          name: t.name,
+        })),
+        role: UserRole.trainer,
+      }),
+    onSuccess: ({ error }) => {
+      if (error) {
+        toast.error(error.data ?? t('auth.register.error'));
+        return;
+      }
       toast.success(t('auth.register.registerTrainerSuccessToast'));
       navigate('/');
-    } else {
-      toast.error(action.message);
-    }
-  }, [action, navigate, t]);
+    },
+    onError: () => {
+      toast.error(t('auth.register.error'));
+    },
+  });
 
   const handleCertificateImageChange = async (index: number, file?: File) => {
     if (!file) return;
@@ -154,41 +173,8 @@ function TrainerForm() {
     }
   };
 
-  const onSubmit: SubmitHandler<TrainerInputs> = (
-    data: TrainerInputs,
-    e: React.FormEvent,
-  ) => {
-    e.preventDefault();
-    submitForm(
-      {
-        firstName: data.firstName,
-        lastName: data.lastName,
-        username: data.username,
-        email: data.email,
-        password: data.password,
-        avatar: data.avatar,
-        avatarPublicId: data.avatarPublicId,
-        gender: data.gender,
-        bio: data.bio,
-        experienceYears: data.experienceYears,
-        certifications: JSON.stringify(
-          data.certifications.map((certificate) => ({
-            name: certificate.name,
-            imageUrl: certificate.imageUrl,
-            imagePublicId: certificate.imagePublicId,
-          })),
-        ),
-        transformations: JSON.stringify(
-          data.transformations.map((transformation) => ({
-            imageUrl: transformation.imageUrl,
-            imagePublicId: transformation.imagePublicId,
-            name: transformation.name,
-          })),
-        ),
-        role: UserRole.trainer,
-      },
-      { method: 'POST' },
-    );
+  const onSubmit: SubmitHandler<TrainerInputs> = (data: TrainerInputs) => {
+    mutate(data);
   };
 
   return (
@@ -449,11 +435,11 @@ function TrainerForm() {
       <button
         type="submit"
         disabled={
-          isLoading || isUploadingCertificate || isUploadingTransformation || isUploadingAvatar
+          isPending || isUploadingCertificate || isUploadingTransformation || isUploadingAvatar
         }
         className="btn-pharaoh w-full rounded-lg flex items-center justify-center gap-2 disabled:opacity-50"
       >
-        {isLoading ? (
+        {isPending ? (
           <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
         ) : (
           <>

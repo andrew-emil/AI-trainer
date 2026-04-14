@@ -6,7 +6,6 @@ import { RouterProvider } from 'react-router';
 import { router } from './router';
 import { AuthProvider } from './contexts/AuthContext';
 import { SocketProvider } from './providers/SocketsProvider';
-import { tokenStore } from './store/tokenStore';
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const queryClient = new QueryClient();
@@ -14,7 +13,7 @@ export const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <SocketProvider jwt={tokenStore.get()}>
+      <SocketProvider>
         <LanguageProvider>
           <WorkoutProvider>
             <NutritionProvider>

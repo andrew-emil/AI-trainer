@@ -14,7 +14,7 @@ import { CreateTraineeNutritionPlanDto } from './dto/create-trainee-nutrition-pl
 import { UpdateTraineeNutritionPlanDto } from './dto/update-trainee-nutrition-plan.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('trainer')
+@Controller('trainers')
 export class TrainerController {
   constructor(private readonly trainerService: TrainerService) { }
 

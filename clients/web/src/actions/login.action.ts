@@ -1,5 +1,4 @@
 import { login } from '@/services/auth';
-import { tokenStore } from '@/store/tokenStore';
 import { ActionFunctionArgs } from 'react-router';
 
 export async function loginAction({ request }: ActionFunctionArgs) {
@@ -13,10 +12,5 @@ export async function loginAction({ request }: ActionFunctionArgs) {
 
   if (error) return error;
 
-  if (data?.token) {
-    if (rememberMe) tokenStore.set(data.token);
-    return data.token;
-  }
-
-  return null;
+  return data ?? null;
 }

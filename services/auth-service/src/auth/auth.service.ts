@@ -190,6 +190,8 @@ export class AuthService {
     async registerAsTrainee(data: RegisterAsTraineeDto) {
         const { goal, heightCm, ...userDto } = data;
 
+        await this.validateDuplicate({ email: userDto.email, username: userDto.username });
+
         const user = await this.userService.create({
             ...userDto,
             role: UserRole.trainee,
@@ -235,6 +237,8 @@ export class AuthService {
             transformations,
             ...userDto
         } = data;
+
+        await this.validateDuplicate({ email: userDto.email, username: userDto.username });
 
         await this.prisma.$transaction(async (tx) => {
             const user = await this.userService.create({
@@ -365,5 +369,26 @@ export class AuthService {
                 expiresAt,
             },
         });
+    }
+
+    private async validateDuplicate(user: Pick<User, "email" | "username">) {
+        const existingUser = await this.userService.findByEmail(user.email);
+        if (existingUser) {
+            throw new RpcException({
+                status: 409,
+                message: "User with this email already exists",
+            });
+        }
+
+        const existingUsername = await this.prisma.user.findUnique({
+            where: { username: user.username }
+        })
+
+        if (existingUsername) {
+            throw new RpcException({
+                status: 409,
+                message: "User with this username already exists",
+            });
+        }
     }
 }
