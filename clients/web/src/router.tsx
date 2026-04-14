@@ -61,7 +61,7 @@ export const router = createBrowserRouter([
       {
         element: <GuestLayout />,
         children: [
-          { path: 'login', element: <Login />, action: loginAction },
+          { path: 'login', element: <Login /> },
           { path: 'register', element: <Register />, action: registerAction },
           {
             path: 'forget-password',

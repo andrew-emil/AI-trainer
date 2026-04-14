@@ -1,15 +1,14 @@
 import { motion } from 'framer-motion';
 import { ArrowRight, Crown, LayoutDashboard } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
-import { tokenStore } from '@/store/tokenStore';
 import { UserRole } from '@/types/entities';
 
 const CTASection = () => {
   const { t } = useTranslation();
   const { auth } = useAuth();
-  const isTokenSet = tokenStore.isSet();
+  const isLoggedIn = !!auth?.user;
 
   function handleNavDashboard() {
     if (!auth || !auth.user) return '/dashboard';
@@ -85,7 +84,7 @@ const CTASection = () => {
             transition={{ delay: 0.5 }}
             className="flex flex-col sm:flex-row gap-4 justify-center"
           >
-            {!isTokenSet ? (
+            {!isLoggedIn ? (
               <>
                 <Link
                   to="/register?role=trainee"

@@ -1,5 +1,4 @@
-import { AuthState, getAuth } from "@/lib/auth";
-import { tokenStore } from "@/store/tokenStore";
+import { AuthState, clearAuthCache, getAuth } from "@/lib/auth";
 import { AuthStatus } from "@/types/auth";
 import React, {
     createContext,
@@ -7,7 +6,6 @@ import React, {
     useRef,
     useState
 } from "react";
-
 
 export type AuthContextValue = {
     auth: AuthState | undefined;
@@ -23,14 +21,11 @@ export const AuthContext = createContext<AuthContextValue | undefined>(undefined
 
 type Props = {
     children: React.ReactNode;
-    initialAuth?: AuthState | null;
 };
 
-export const AuthProvider: React.FC<Props> = ({ children, initialAuth }) => {
-    const [auth, setAuth] = useState<AuthState | undefined>(
-        initialAuth ?? undefined
-    );
-    const [loading, setLoading] = useState<boolean>(initialAuth ? false : true);
+export const AuthProvider: React.FC<Props> = ({ children }) => {
+    const [auth, setAuth] = useState<AuthState | undefined>(undefined);
+    const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<unknown>();
     const inflightRef = useRef<Promise<AuthState> | null>(null);
 
@@ -47,7 +42,6 @@ export const AuthProvider: React.FC<Props> = ({ children, initialAuth }) => {
                 setError(err);
                 const unauth: AuthState = {
                     status: AuthStatus.UNAUTHENTICATED,
-                    token: null,
                     user: null,
                 };
                 setAuth(unauth);
@@ -62,17 +56,16 @@ export const AuthProvider: React.FC<Props> = ({ children, initialAuth }) => {
     };
 
     const refresh = async () => {
+        clearAuthCache();
         return fetchAuth();
     };
 
     const logout = () => {
-        tokenStore.clear();
-        const unauth: AuthState = {
+        clearAuthCache();
+        setAuth({
             status: AuthStatus.UNAUTHENTICATED,
-            token: null,
             user: null,
-        };
-        setAuth(unauth);
+        });
     };
 
     useEffect(() => {
@@ -83,25 +76,8 @@ export const AuthProvider: React.FC<Props> = ({ children, initialAuth }) => {
         } else {
             setLoading(false);
         }
-    }, [auth]);
-
-    // useEffect(() => {
-    //     const onFocus = () => {
-    //         if (!auth) return;
-    //         if (auth.user === null) {
-    //             fetchAuth().catch(() => { });
-    //         }
-    //     };
-
-    //     window.addEventListener("focus", onFocus);
-    //     document.addEventListener("visibilitychange", () => {
-    //         if (document.visibilityState === "visible") onFocus();
-    //     });
-
-    //     return () => {
-    //         window.removeEventListener("focus", onFocus);
-    //     };
-    // }, [auth]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const value: AuthContextValue = {
         auth,

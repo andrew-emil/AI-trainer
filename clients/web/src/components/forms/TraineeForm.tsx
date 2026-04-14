@@ -1,19 +1,15 @@
 import { useAuth } from '@/hooks/useAuth';
+import { registerAsTrainee } from '@/services/auth';
 import { Gender, TraineeGoal, UserRole } from '@/types/entities';
-import { ErrorResponse } from '@/types/errorResponse';
 import { CreateTraineeDto } from '@/types/trainee';
 import { CreateUserDto } from '@/types/user';
 import { UserPlus } from 'lucide-react';
-import { Activity, useEffect, useEffectEvent, useState } from 'react';
+import { Activity, useState } from 'react';
 import { SubmitHandler, useForm, UseFormRegister } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import {
-  useActionData,
-  useNavigate,
-  useNavigation,
-  useSubmit,
-} from 'react-router';
+import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
+import { useMutation } from '@tanstack/react-query';
 import { Input } from '../ui/input';
 import UserForm from './UserForm';
 
@@ -43,41 +39,12 @@ function TraineeForm() {
       heightCm: 40,
     },
   });
-  const { state } = useNavigation();
   const { refresh } = useAuth();
-  const isLoading = state === 'submitting' || state === 'loading';
   const navigate = useNavigate();
-  const submitForm = useSubmit();
-  const action = useActionData<string | ErrorResponse>();
 
-  const onActionChange = useEffectEvent((action: string | ErrorResponse) => {
-    if (!action) return;
-
-    if (typeof action === 'string') {
-      toast.success(t('auth.register.welcomeToast'));
-      refresh().then(() => {
-        navigate('/');
-      });
-    } else {
-      toast.error(action.message);
-    }
-  });
-
-  useEffect(() => {
-    onActionChange(action);
-  }, [action]);
-
-  const isTraineeGoal = (v: unknown): v is TraineeGoal =>
-    typeof v === 'string' &&
-    (Object.values(TraineeGoal) as string[]).includes(v);
-
-  const onSubmit: SubmitHandler<TraineeInputs> = (
-    data: TraineeInputs,
-    e: React.FormEvent,
-  ) => {
-    e.preventDefault();
-    submitForm(
-      {
+  const { mutate, isPending } = useMutation({
+    mutationFn: (data: TraineeInputs) =>
+      registerAsTrainee({
         firstName: data.firstName,
         lastName: data.lastName,
         username: data.username,
@@ -89,9 +56,28 @@ function TraineeForm() {
         goal: data.goal,
         heightCm: data.heightCm,
         role: UserRole.trainee,
-      },
-      { method: 'POST' },
-    );
+      }),
+    onSuccess: ({ error }) => {
+      if (error) {
+        toast.error(error.data ?? t('auth.register.error'));
+        return;
+      }
+      toast.success(t('auth.register.welcomeToast'));
+      refresh().then(() => {
+        navigate('/dashboard');
+      });
+    },
+    onError: () => {
+      toast.error(t('auth.register.error'));
+    },
+  });
+
+  const isTraineeGoal = (v: unknown): v is TraineeGoal =>
+    typeof v === 'string' &&
+    (Object.values(TraineeGoal) as string[]).includes(v);
+
+  const onSubmit: SubmitHandler<TraineeInputs> = (data: TraineeInputs) => {
+    mutate(data);
   };
 
   return (
@@ -169,10 +155,10 @@ function TraineeForm() {
       {/* Submit Button */}
       <button
         type="submit"
-        disabled={isLoading || isUploadingAvatar}
+        disabled={isPending || isUploadingAvatar}
         className="btn-pharaoh w-full rounded-lg flex items-center justify-center gap-2 disabled:opacity-50"
       >
-        {isLoading ? (
+        {isPending ? (
           <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
         ) : (
           <>

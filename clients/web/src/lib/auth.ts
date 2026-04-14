@@ -1,5 +1,4 @@
 import { getMyUser } from '@/services/user';
-import { tokenStore } from '@/store/tokenStore';
 import { AuthStatus } from '@/types/auth';
 import { SafeUser } from '@/types/user';
 
@@ -7,66 +6,46 @@ import { SafeUser } from '@/types/user';
 
 export type AuthState = {
   status: AuthStatus;
-  token: string | null;
   user: SafeUser | null;
 };
 
 /* ---------- Module Cache ---------- */
 
-let cachedToken: string | null = null;
 let cachedUser: SafeUser | null = null;
-let inflight: Promise<SafeUser> | null = null;
+let inflight: Promise<SafeUser | null> | null = null;
 
 /* ---------- Auth Resolver ---------- */
 
 export async function getAuth(): Promise<AuthState> {
-  const token = tokenStore.get();
-
-  if (!token) {
-    resetCache();
-    return { status: AuthStatus.UNAUTHENTICATED, token: null, user: null };
+  if (cachedUser) {
+    return { status: AuthStatus.AUTHENTICATED, user: cachedUser };
   }
 
-  // Token unchanged → reuse cached user
-  if (cachedToken === token && cachedUser) {
-    return {
-      status: AuthStatus.AUTHENTICATED,
-      token,
-      user: cachedUser,
-    };
+  if (!inflight) {
+    inflight = getMyUser()
+      .then(({ data, error }) => {
+        if (error || !data) return null;
+        return data;
+      })
+      .finally(() => {
+        inflight = null;
+      });
   }
 
-  try {
-    cachedToken = token;
+  const user = await inflight;
 
-    // Single-flight request
-    inflight ??= getMyUser().then(res => {
-      if (res.error) throw res.error;
-      return res.data as SafeUser; // safe because we threw on error
-    });
-
-
-    const user = await inflight;
-
-    cachedUser = user;
-    inflight = null;
-
-    return {
-      status: AuthStatus.AUTHENTICATED,
-      token,
-      user,
-    };
-  } catch {
-    tokenStore.clear();
-    resetCache();
-    return { status: AuthStatus.UNAUTHENTICATED, token: null, user: null };
+  if (!user) {
+    cachedUser = null;
+    return { status: AuthStatus.UNAUTHENTICATED, user: null };
   }
+
+  cachedUser = user;
+  return { status: AuthStatus.AUTHENTICATED, user };
 }
 
 /* ---------- Utilities ---------- */
 
-function resetCache() {
-  cachedToken = null;
+export function clearAuthCache() {
   cachedUser = null;
   inflight = null;
 }

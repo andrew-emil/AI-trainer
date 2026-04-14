@@ -2,19 +2,15 @@ import FormWrapper from '@/components/forms/FormWrapper';
 import EgyptianDivider from '@/components/ui/EgyptianDivider';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
-import { ErrorResponse } from '@/types/errorResponse';
+import { login } from '@/services/auth';
 import { Eye, EyeOff, LogIn } from 'lucide-react';
-import { Activity, useEffect, useState } from 'react';
+import { Activity, useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import {
-  Link,
-  useActionData,
-  useNavigate,
-  useNavigation,
-  useSubmit,
-} from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { toast } from 'sonner';
+import { useMutation } from '@tanstack/react-query';
+import { UserRole } from '@/types/entities';
 
 type Inputs = {
   email: string;
@@ -23,15 +19,11 @@ type Inputs = {
 };
 
 const Login = () => {
-  const submit = useSubmit();
   const navigate = useNavigate();
-  const actionData = useActionData<string | ErrorResponse>();
   const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
-  const { state } = useNavigation();
-  const isLoading = state === 'submitting' || state === 'loading';
-
   const { refresh } = useAuth();
+
   const {
     register,
     handleSubmit,
@@ -44,10 +36,15 @@ const Login = () => {
     },
   });
 
-  useEffect(() => {
-    if (!actionData) return;
+  const { mutate, isPending } = useMutation({
+    mutationFn: (data: Pick<Inputs, 'email' | 'password'>) =>
+      login({ email: data.email, password: data.password }),
+    onSuccess: ({ data, error }) => {
+      if (error) {
+        toast.error(error.status ?? t('auth.login.error'));
+        return;
+      }
 
-    if (typeof actionData === 'string') {
       toast.success(t('auth.login.welcomeToast'));
       refresh().then((authState) => {
         if (!authState.user) {
@@ -56,28 +53,27 @@ const Login = () => {
         }
 
         switch (authState.user.role) {
-          case 'trainee':
+          case UserRole.trainee:
             navigate('/dashboard');
             break;
-          case 'trainer':
+          case UserRole.trainer:
             navigate('/workout-plans');
             break;
-          case 'admin':
+          case UserRole.admin:
             navigate('/admin');
             break;
           default:
             navigate('/');
         }
       });
-    } else {
-      const error = actionData as ErrorResponse;
-      toast.error(error.message ?? t('auth.login.error'));
-    }
-  }, [actionData, navigate, t, refresh]);
+    },
+    onError: () => {
+      toast.error(t('auth.login.error'));
+    },
+  });
 
-  const onSubmit: SubmitHandler<Inputs> = (data, e: React.FormEvent) => {
-    e.preventDefault();
-    submit(data, { method: 'post' });
+  const onSubmit: SubmitHandler<Inputs> = (data) => {
+    mutate(data);
   };
 
   return (
@@ -163,10 +159,10 @@ const Login = () => {
 
         <button
           type="submit"
-          disabled={isLoading}
+          disabled={isPending}
           className="btn-pharaoh w-full rounded-lg flex items-center justify-center gap-2 disabled:opacity-50"
         >
-          {isLoading ? (
+          {isPending ? (
             <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
           ) : (
             <>

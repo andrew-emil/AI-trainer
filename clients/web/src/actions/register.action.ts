@@ -1,4 +1,3 @@
-import { tokenStore } from '@/store/tokenStore';
 import { RegisterAsTraineeDto, RegisterAsTrainerDto } from '@/types/auth';
 import { Gender, TraineeGoal, UserRole } from '@/types/entities';
 import { ActionFunctionArgs } from 'react-router';
@@ -115,11 +114,7 @@ export async function registerAction({ request }: ActionFunctionArgs) {
 
     if (error) return error;
 
-    if (data?.token) {
-      tokenStore.set(data.token);
-      return data.token;
-    }
-    return null;
+    return data ?? null;
   }
 
   if (role === UserRole.trainer) {

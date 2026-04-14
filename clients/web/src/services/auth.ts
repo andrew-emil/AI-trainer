@@ -12,6 +12,7 @@ export const login = async (body: { email: string; password: string }) => {
   const [{ data }, error] = await tryCatch(
     axiosClient.post<AuthResponse>('/auth/login', body)
   );
+  console.log(error)
   return { data, error };
 };
 

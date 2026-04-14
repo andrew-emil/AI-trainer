@@ -10,7 +10,9 @@ function TrainersGrid() {
     const { data: trainers, error: trainersError } = data;
 
     if (error || trainersError) {
-        return <div className="text-center text-red-500 font-bold">Error: {error?.message || trainersError?.message}</div>
+        return (
+            <div className="text-center text-red-500 font-bold">Error: {error?.message || trainersError?.message}</div>
+        )
     }
 
     return (

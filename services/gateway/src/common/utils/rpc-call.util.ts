@@ -13,9 +13,7 @@ export async function rpcCall<T>(
     schema: Joi.ObjectSchema<any>,
 ): Promise<T> {
     try {
-        console.log("connecting...")
         await client.connect()
-        console.log('About to send message');
         const response = await firstValueFrom(client.send<T>(pattern, payload));
         console.log('Response received', response);
         return schema.validate(response).value;

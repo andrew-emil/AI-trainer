@@ -16,7 +16,7 @@ import { RabbitProducerService } from './rabbit-producer.service';
             urls: [configService.get<string>('rabbit.url')!],
             queue: configService.get<string>('rabbit.coachDomainQueue'),
             queueOptions: {
-              durable: false,
+              durable: true,
             },
           },
         }),
@@ -32,7 +32,7 @@ import { RabbitProducerService } from './rabbit-producer.service';
             urls: [configService.get<string>('rabbit.url')!],
             queue: configService.get<string>('rabbit.interactionQueue'),
             queueOptions: {
-              durable: false,
+              durable: true,
             },
           },
         }),
