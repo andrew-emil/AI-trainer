@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { UserRole } from '@/types/entities';
+import { UserRole } from '@/services/user';
 import { TFunction } from 'i18next';
 import {
   LayoutDashboard,
@@ -28,21 +28,11 @@ export function returnNavItems(
   switch (role) {
     case UserRole.admin:
       return [
-        // {
-        //   icon: LayoutDashboard,
-        //   label: t('nav.dashboard'),
-        //   path: '/dashboard',
-        // },
         { icon: Shield, label: t('nav.admin'), path: '/admin' },
         { icon: MessageCircle, label: t('nav.chats'), path: '/chats' },
       ];
     case UserRole.trainer:
       return [
-        // {
-        //   icon: LayoutDashboard,
-        //   label: t('nav.dashboard'),
-        //   path: '/dashboard',
-        // },
         {
           icon: Dumbbell,
           label: t('nav.workoutPlans'),
@@ -55,8 +45,6 @@ export function returnNavItems(
           label: t('nav.nutritionCalculator'),
           path: '/nutrition-calculator',
         },
-        // should make a progress page for a trainer that containes the progress for each trainee
-        // { icon: TrendingUp, label: t('nav.progress'), path: '/progress' },
         { icon: MessageCircle, label: t('nav.chats'), path: '/chats' },
       ];
     case UserRole.trainee:

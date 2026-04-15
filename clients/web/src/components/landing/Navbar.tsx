@@ -1,7 +1,7 @@
 import EgyptianLogo from '@/components/ui/EgyptianLogo';
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher';
 import { useAuth } from '@/hooks/useAuth';
-import { UserRole } from '@/types/entities';
+import { UserRole } from '@/services/user';
 import { AnimatePresence, motion } from 'framer-motion';
 import { LogOut, Menu, X } from 'lucide-react';
 import { Activity, useState } from 'react';

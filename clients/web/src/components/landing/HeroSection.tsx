@@ -3,7 +3,7 @@ import { ArrowRight, Crown, Dumbbell, LayoutDashboard } from 'lucide-react';
 import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
-import { UserRole } from '@/types/entities';
+import { UserRole } from '@/services/user';
 import heroPharaoh from '@/assets/hero-pharaoh.jpg';
 import EgyptianDivider from '@/components/ui/EgyptianDivider';
 

@@ -1,27 +1,30 @@
-import { AuthState, clearAuthCache, getAuth } from "@/lib/auth";
-import { AuthStatus } from "@/types/auth";
-import React, {
-    createContext,
-    useEffect,
-    useRef,
-    useState
-} from "react";
+import {
+    AuthState,
+    clearAuthCache,
+    getAuth,
+    persistAuth,
+} from '@/lib/auth';
+import {
+    logout as apiLogout,
+    refreshAccessToken,
+} from '@/services/auth';
+import { IUser } from '@/services/user';
+import { AuthStatus } from '@/types/auth';
+import React, { createContext, useEffect, useRef, useState } from 'react';
 
 export type AuthContextValue = {
     auth: AuthState | undefined;
     loading: boolean;
     error?: unknown;
     refresh: () => Promise<AuthState>;
-    logout: () => void;
-    setAuthDirect?: (a: AuthState) => void;
+    logout: () => Promise<void>;
+    setAuthDirect: (user: IUser) => void;
 };
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-type Props = {
-    children: React.ReactNode;
-};
+type Props = { children: React.ReactNode };
 
 export const AuthProvider: React.FC<Props> = ({ children }) => {
     const [auth, setAuth] = useState<AuthState | undefined>(undefined);
@@ -31,6 +34,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
     const fetchAuth = async (): Promise<AuthState> => {
         if (inflightRef.current) return inflightRef.current;
+
         const p = (async () => {
             setLoading(true);
             setError(undefined);
@@ -40,10 +44,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
                 return result;
             } catch (err) {
                 setError(err);
-                const unauth: AuthState = {
-                    status: AuthStatus.UNAUTHENTICATED,
-                    user: null,
-                };
+                const unauth: AuthState = { status: AuthStatus.UNAUTHENTICATED, user: null };
                 setAuth(unauth);
                 return unauth;
             } finally {
@@ -51,42 +52,57 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
                 inflightRef.current = null;
             }
         })();
+
         inflightRef.current = p;
         return p;
     };
 
-    const refresh = async () => {
+    /**
+     * Calls /auth/refresh to rotate the access token via httpOnly cookie,
+     * then re-fetches the user to sync context with any updated claims.
+     */
+    const refresh = async (): Promise<AuthState> => {
+        try {
+            await refreshAccessToken();
+        } catch {
+            // Refresh token is expired/invalid — treat as logged out
+            clearAuthCache();
+            const unauth: AuthState = { status: AuthStatus.UNAUTHENTICATED, user: null };
+            setAuth(unauth);
+            return unauth;
+        }
+        // Token is fresh — re-fetch user to sync context
         clearAuthCache();
         return fetchAuth();
     };
 
-    const logout = () => {
+    /**
+     * Invalidates the httpOnly cookie server-side, then wipes all local state.
+     * Fire-and-forget the API call so the UI clears immediately even if the
+     * network is slow.
+     */
+    const logout = async (): Promise<void> => {
         clearAuthCache();
-        setAuth({
-            status: AuthStatus.UNAUTHENTICATED,
-            user: null,
-        });
+        setAuth({ status: AuthStatus.UNAUTHENTICATED, user: null });
+        try {
+            await apiLogout();
+        } catch {
+            // Cookie may already be expired — not a fatal error
+        }
+    };
+
+    const setAuthDirect = (user: IUser) => {
+        const next = persistAuth(user);
+        setAuth(next);
     };
 
     useEffect(() => {
-        if (auth === undefined) {
-            fetchAuth().catch(() => {
-                /* handled inside fetchAuth */
-            });
-        } else {
-            setLoading(false);
-        }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        fetchAuth().catch(() => { });
     }, []);
 
-    const value: AuthContextValue = {
-        auth,
-        loading,
-        error,
-        refresh,
-        logout,
-        setAuthDirect: setAuth,
-    };
-
-    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+    return (
+        <AuthContext.Provider value={{ auth, loading, error, refresh, logout, setAuthDirect }}>
+            {children}
+        </AuthContext.Provider>
+    );
 };

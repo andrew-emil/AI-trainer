@@ -39,8 +39,8 @@ export function ChatContent() {
     } = useSuspenseInfiniteQuery(infiniteMessagesQuery(chatId!));
 
     // 2️⃣ Flatten pages
-    const allMessages = useMemo(() => {
-        return data.pages.flatMap(page => page.data.data);
+    const allMessages: MessageWithSender[] = useMemo(() => {
+        return data.pages.flatMap(page => page.data || []);
     }, [data]);
 
 
@@ -59,7 +59,7 @@ export function ChatContent() {
     // Redirect if conversation doesn't exist
     useEffect(() => {
         if (conversationsError) {
-            toast.error(conversationsError.message);
+            toast.error("Failed to load conversations");
             navigate('/chats', { replace: true });
         }
     }, [conversationsError, navigate]);

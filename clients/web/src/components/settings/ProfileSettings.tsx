@@ -3,8 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { ImageType, uploadImageToCloudinary } from '@/lib/cloudinary';
 import { validateImage } from '@/lib/utils';
 import { findTrainerById, updateTrainer } from '@/services/trainer';
-import { updateUser } from '@/services/user';
-import { UserRole } from '@/types/entities';
+import { updateUser, UserRole } from '@/services/user';
 import { motion } from 'framer-motion';
 import {
   Camera,
@@ -99,7 +98,7 @@ function ProfileSettings() {
   useEffect(() => {
     if (user?.role === UserRole.trainer && user?.id) {
       setIsFetchingTrainer(true);
-      findTrainerById(user.id).then(({ data }) => {
+      findTrainerById(user.id).then((data) => {
         if (data) {
           setValue('bio', data.bio || '');
           setValue('experienceYears', data.experienceYears || 0);
@@ -198,57 +197,49 @@ function ProfileSettings() {
   const handleSaveProfile = async (data: ProfileFormValues) => {
     try {
       // 1. Update User
-      const { error: userError } = await updateUser({
+      await updateUser({
         firstName: data.firstName,
         lastName: data.lastName,
         username: data.username,
         avatar: data.avatar,
         avatarPublicId: data.avatarPublicId,
       });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update user profile',
+        variant: 'destructive',
+      });
+      return;
+    }
 
-      if (userError) {
-        toast({
-          title: 'Error',
-          description: userError.message || 'Failed to update user profile',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      // 2. Update Trainer (if applicable)
-      if (user.role === UserRole.trainer) {
-        const { error: trainerError } = await updateTrainer({
+    // 2. Update Trainer (if applicable)
+    if (user.role === UserRole.trainer) {
+      try {
+        await updateTrainer({
           bio: data.bio,
           experienceYears: Number(data.experienceYears),
           certifications: data.certifications,
           transformations: data.transformations,
         });
-
-        if (trainerError) {
-          toast({
-            title: 'Error',
-            description:
-              trainerError.message || 'Failed to update trainer profile',
-            variant: 'destructive',
-          });
-          return;
-        }
+      } catch (error) {
+        toast({
+          title: 'Error',
+          description:
+            error.message || 'Failed to update trainer profile',
+          variant: 'destructive',
+        });
+        return;
       }
-
-      if (refresh) await refresh();
-      reset(data);
-
-      toast({
-        title: t('settings.profile.saveChanges'),
-        description: 'Your profile has been updated successfully',
-      });
-    } catch (err) {
-      toast({
-        title: 'Error',
-        description: 'An unexpected error occurred',
-        variant: 'destructive',
-      });
     }
+
+    if (refresh) await refresh();
+    reset(data);
+
+    toast({
+      title: t('settings.profile.saveChanges'),
+      description: 'Your profile has been updated successfully',
+    });
   };
 
   const handleRemovePhoto = () => {

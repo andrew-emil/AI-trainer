@@ -1,8 +1,7 @@
 import { ImageType, uploadImageToCloudinary } from '@/lib/cloudinary';
-import { Gender } from '@/types/entities';
-import { CreateUserDto } from '@/types/user';
+import { CreateUserDto, Gender } from '@/services/user';
 import { Eye, EyeOff, Upload, X } from 'lucide-react';
-import { Activity, useState } from 'react';
+import { useState } from 'react';
 import {
   FieldErrors,
   Path,
@@ -12,8 +11,8 @@ import {
 } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { Input } from '../ui/input';
 import { Button } from '../ui/button';
+import { Input } from '../ui/input';
 import UserAvatar from '../UserAvatar';
 
 interface UserFormProps<T extends CreateUserDto & { confirmPassword: string }> {

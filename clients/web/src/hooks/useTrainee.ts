@@ -1,12 +1,12 @@
-import { useQuery } from '@tanstack/react-query';
 import {
-  getAssignedWorkoutPlans,
   getAssignedNutritionPlans,
   getAssignedTrainers,
+  getAssignedWorkoutPlans,
 } from '@/services/trainee';
 import { getAssignedWorkoutPlanForTrainee } from '@/services/trainer';
+import { UserRole } from '@/services/user';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from './useAuth';
-import { UserRole } from '@/types/entities';
 
 /**
  * Hook to fetch workout plans assigned to a trainee.
@@ -17,10 +17,6 @@ export const useTraineeAssignedWorkoutPlans = (traineeId?: string) => {
   const { auth } = useAuth();
   const role = auth?.user?.role;
 
-  // Enable if:
-  // 1. User is Trainee AND no traineeId provided (fetching own)
-  // 2. User is Trainer AND traineeId provided (fetching for trainee)
-
   const isTraineeFetchingOwn = role === UserRole.trainee && !traineeId;
   const isTrainerFetchingTrainee = role === UserRole.trainer && !!traineeId;
 
@@ -30,16 +26,24 @@ export const useTraineeAssignedWorkoutPlans = (traineeId?: string) => {
     queryKey: ['traineeWorkoutPlans', traineeId || 'me'],
     queryFn: async () => {
       if (isTrainerFetchingTrainee && traineeId) {
-        const { data, error } = await getAssignedWorkoutPlanForTrainee(
-          traineeId,
-          true,
-        );
-        if (error) throw error;
-        return data || [];
+        try {
+          const data = await getAssignedWorkoutPlanForTrainee(
+            traineeId,
+            true,
+          );
+          return data || [];
+        } catch (error) {
+          console.error(error);
+          return [];
+        }
       } else {
-        const { data, error } = await getAssignedWorkoutPlans();
-        if (error) throw error;
-        return data || [];
+        try {
+          const data = await getAssignedWorkoutPlans();
+          return data || [];
+        } catch (error) {
+          console.error(error);
+          return [];
+        }
       }
     },
     enabled: isEnabled,
@@ -56,9 +60,13 @@ export const useTraineeAssignedNutritionPlans = () => {
   return useQuery({
     queryKey: ['traineeNutritionPlans'],
     queryFn: async () => {
-      const { data, error } = await getAssignedNutritionPlans();
-      if (error) throw error;
-      return data || [];
+      try {
+        const data = await getAssignedNutritionPlans();
+        return data || [];
+      } catch (error) {
+        console.error(error);
+        return [];
+      }
     },
     enabled: isTrainee,
   });
@@ -74,9 +82,13 @@ export const useTraineeAssignedTrainers = () => {
   return useQuery({
     queryKey: ['traineeAssignedTrainers'],
     queryFn: async () => {
-      const { data, error } = await getAssignedTrainers();
-      if (error) throw error;
-      return data || null;
+      try {
+        const data = await getAssignedTrainers();
+        return data || null;
+      } catch (error) {
+        console.error(error);
+        return null;
+      }
     },
     enabled: isTrainee,
   });

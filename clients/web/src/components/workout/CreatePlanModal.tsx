@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,12 +19,10 @@ import {
   useUpdateWorkoutPlan,
 } from '@/hooks/useWorkoutPlans';
 import { useAuth } from '@/hooks/useAuth';
-import {
-  CreateWorkoutPlanDto,
-  UpdateWorkoutPlanDto,
-} from '@/types/workout-plans';
-import { WorkoutPlan, TraineeGoal } from '@/types/entities';
 import { useToast } from '@/hooks/use-toast';
+import { TraineeGoal } from '@/services/trainee';
+import { WorkoutPlan } from '@/services/trainer';
+import { CreateWorkoutPlanDto, UpdateWorkoutPlanDto } from '@/types/workout-plans';
 
 interface CreatePlanModalProps {
   isOpen: boolean;
@@ -50,6 +48,7 @@ const CreatePlanModal = ({
 
   useEffect(() => {
     if (editPlan) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setName(editPlan.name);
       setGoal(editPlan.goal);
       setWeeks(editPlan.weeks);

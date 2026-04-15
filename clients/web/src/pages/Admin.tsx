@@ -31,13 +31,14 @@ import {
   deactivateTrainer,
   activateTrainee,
   deactivateTrainee,
+  getTrainerRequests,
 } from '@/services/admin';
-import { trainerRequestsQuery, usersQuery } from '@/lib/queries/admin.query';
-import { trainersQuery } from '@/lib/queries/trainer.query';
 import { toast } from 'sonner';
-import { TrainerRequestStatus, UserRole } from '@/types/entities';
+import { TrainerRequestStatus } from '@/types/entities';
 import { useNavigate } from 'react-router';
 import { RejectRequestDialog } from '@/components/admin/RejectRequestDialog';
+import { userQueryKeys, UserRole } from '@/services/user';
+import { findAllTrainers, trainerQueryKeys } from '@/services/trainer';
 
 const Admin = () => {
   const { t } = useTranslation();
@@ -50,16 +51,24 @@ const Admin = () => {
   );
 
   // Queries
-  const { data: requestsData, isLoading: isLoadingRequests } = useQuery(
-    trainerRequestsQuery(requestFilter),
-  );
-  const { data: usersData, isLoading: isLoadingUsers } = useQuery(usersQuery());
+  const { data: requestsData, isLoading: isLoadingRequests } = useQuery({
+    queryKey: ['trainerRequests', requestFilter],
+    queryFn: () => getTrainerRequests(requestFilter),
+  });
+  // const { data: usersData, isLoading: isLoadingUsers } = useQuery({
+  //   queryKey: userQueryKeys,
+  //   queryFn: usersQuery,
+  // });
   const { data: trainersData, isLoading: isLoadingTrainers } =
-    useQuery(trainersQuery()); // Fetch all trainers
+    useQuery({
+      queryKey: trainerQueryKeys.all(),
+      queryFn: () => findAllTrainers(true),
+      staleTime: 60_000,
+    }); // Fetch all trainers
 
   const requests = requestsData?.data || [];
-  const allUsers = usersData?.data || [];
-  const allTrainers = trainersData?.data || [];
+  // const allUsers = usersData?.data || [];
+  const allTrainers = trainersData ?? [];
 
   // Mutations
   const approveMutation = useMutation({
@@ -111,13 +120,13 @@ const Admin = () => {
     onError: () => toast.error(t('admin.users.actionError')),
   });
 
-  const filteredUsers = allUsers.filter(
-    (u) =>
-      u.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.username?.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  // const filteredUsers = allUsers.filter(
+  //   (u) =>
+  //     u.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  //     u.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  //     u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  //     u.username?.toLowerCase().includes(searchQuery.toLowerCase()),
+  // );
 
   const filteredTrainers = allTrainers.filter(
     (t) =>
@@ -501,7 +510,7 @@ const Admin = () => {
               />
             </div>
 
-            <div className="grid gap-4">
+            {/* <div className="grid gap-4">
               {isLoadingUsers ? (
                 <div className="text-center py-12 text-muted-foreground">
                   {t('common.loading')}
@@ -545,8 +554,6 @@ const Admin = () => {
                             </Badge>
                           </div>
 
-                          {/* Placeholder for activation status if we had it in SafeUser */}
-                          {/* For now, we'll just show the buttons as if they could be toggled */}
                           <div className="flex gap-2">
                             <Button
                               size="sm"
@@ -585,7 +592,7 @@ const Admin = () => {
                   </motion.div>
                 ))
               )}
-            </div>
+            </div> */}
           </TabsContent>
         </Tabs>
       </div>
