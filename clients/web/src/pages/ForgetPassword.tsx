@@ -1,10 +1,11 @@
 import FormWrapper from '@/components/forms/FormWrapper';
 import { Input } from '@/components/ui/input';
+import { forgetPassword } from '@/services/auth';
+import { useMutation } from '@tanstack/react-query';
 import { LogIn } from 'lucide-react';
-import { Activity, useEffect } from 'react';
+import { Activity } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { useActionData, useNavigation, useSubmit } from 'react-router';
 import { toast } from 'sonner';
 
 type ForgetPasswordForm = {
@@ -12,11 +13,7 @@ type ForgetPasswordForm = {
 };
 
 function ForgetPassword() {
-  const submit = useSubmit();
-  const action = useActionData<string>();
   const { t } = useTranslation();
-  const { state } = useNavigation();
-  const isLoading = state === 'submitting' || state === 'loading';
   const {
     register,
     handleSubmit,
@@ -27,17 +24,18 @@ function ForgetPassword() {
     },
   });
 
-  useEffect(() => {
-    if (!action) return;
-
-    if (action) {
+  const { mutate, isPending: isLoading } = useMutation({
+    mutationFn: (data: ForgetPasswordForm) => forgetPassword(data.email),
+    onSuccess: () => {
       toast.success(t('auth.forgetPassword.successToast'));
-    }
-  }, [action, t]);
+    },
+    onError: (error: any) => {
+      toast.error(error ?? t('auth.forgetPassword.error'));
+    },
+  });
 
-  const onSubmit = (data: ForgetPasswordForm, e: React.FormEvent) => {
-    e.preventDefault();
-    submit(data, { method: 'post' });
+  const onSubmit = (data: ForgetPasswordForm) => {
+    mutate(data);
   };
 
   return (

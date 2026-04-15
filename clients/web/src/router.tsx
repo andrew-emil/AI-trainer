@@ -14,36 +14,32 @@ import Features from '@/pages/Features';
 import ForgetPassword from '@/pages/ForgetPassword';
 import Index from '@/pages/Index';
 import Login from '@/pages/Login';
-import MyWorkouts from '@/pages/MyWorkouts';
 import MyNutrition from '@/pages/MyNutrition';
-import NutritionPlans from '@/pages/NutritionPlans';
+import MyWorkouts from '@/pages/MyWorkouts';
+import NutritionCalculatorPage from '@/pages/NutritionCalculatorPage';
 import NutritionPlanDetails from '@/pages/NutritionPlanDetails';
-import Progress from '@/pages/Progress';
+import NutritionPlans from '@/pages/NutritionPlans';
 import Register from '@/pages/Register';
 import ResetPassword from '@/pages/ResetPassword';
 import Schedule from '@/pages/Schedule';
 import Settings from '@/pages/Settings';
 import TraineeDetail from '@/pages/TraineeDetail';
 import TraineeProfile from '@/pages/TraineeProfile';
+import TraineeProgress from '@/pages/TraineeProgress';
 import Trainees from '@/pages/Trainees';
 import TrainerProfile from '@/pages/TrainerProfile';
 import Trainers from '@/pages/Trainers';
-import TraineeProgress from '@/pages/TraineeProgress';
 import WeightLog from '@/pages/WeightLog';
-import WorkoutPlans from '@/pages/WorkoutPlans';
 import WorkoutPlanDetails from '@/pages/WorkoutPlanDetails';
-import NutritionCalculatorPage from '@/pages/NutritionCalculatorPage';
+import WorkoutPlans from '@/pages/WorkoutPlans';
 import TrainerRequestDetails from '@/pages/admin/TrainerRequestDetails';
 
 // actions
-import { forgetPasswordAction } from '@/actions/forgetPassword.action';
-import { loginAction } from '@/actions/login.action';
-import { registerAction } from '@/actions/register.action';
-import { resetPasswordAction } from '@/actions/resetPassword.action';
 
 // loaders
 import { requireAuthLoader } from '@/loaders/requireAuth.loader';
 import MyReviews from './pages/MyReviews';
+import { UserRole } from './services/user';
 
 export const router = createBrowserRouter([
   {
@@ -62,16 +58,14 @@ export const router = createBrowserRouter([
         element: <GuestLayout />,
         children: [
           { path: 'login', element: <Login /> },
-          { path: 'register', element: <Register />, action: registerAction },
+          { path: 'register', element: <Register /> },
           {
             path: 'forget-password',
             element: <ForgetPassword />,
-            action: forgetPasswordAction,
           },
           {
             path: 'reset-password',
             element: <ResetPassword />,
-            action: resetPasswordAction,
           },
         ],
       },
@@ -88,7 +82,7 @@ export const router = createBrowserRouter([
           // Trainee only routes
           {
             element: <Outlet />,
-            loader: requireAuthLoader(['trainee']),
+            loader: requireAuthLoader([UserRole.trainee]),
             children: [
               { path: 'dashboard', element: <Dashboard /> },
               { path: 'my-workouts', element: <MyWorkouts /> },
@@ -103,7 +97,7 @@ export const router = createBrowserRouter([
           // Trainer only routes
           {
             element: <Outlet />,
-            loader: requireAuthLoader(['trainer']),
+            loader: requireAuthLoader([UserRole.trainer]),
             children: [
               { path: 'workout-plans', element: <WorkoutPlans /> },
               { path: 'workout-plans/:id', element: <WorkoutPlanDetails /> },
@@ -130,7 +124,7 @@ export const router = createBrowserRouter([
       },
       {
         element: <Outlet />,
-        loader: requireAuthLoader(['admin']),
+        loader: requireAuthLoader([UserRole.admin]),
         children: [
           { path: 'admin', element: <Admin /> },
           {

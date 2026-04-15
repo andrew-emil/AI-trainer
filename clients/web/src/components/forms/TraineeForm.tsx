@@ -1,8 +1,7 @@
 import { useAuth } from '@/hooks/useAuth';
 import { registerAsTrainee } from '@/services/auth';
-import { Gender, TraineeGoal, UserRole } from '@/types/entities';
-import { CreateTraineeDto } from '@/types/trainee';
-import { CreateUserDto } from '@/types/user';
+import { TraineeGoal, CreateTraineeDto } from '@/services/trainee';
+import { Gender, UserRole, CreateUserDto } from '@/services/user';
 import { UserPlus } from 'lucide-react';
 import { Activity, useState } from 'react';
 import { SubmitHandler, useForm, UseFormRegister } from 'react-hook-form';
@@ -57,18 +56,14 @@ function TraineeForm() {
         heightCm: data.heightCm,
         role: UserRole.trainee,
       }),
-    onSuccess: ({ error }) => {
-      if (error) {
-        toast.error(error.data ?? t('auth.register.error'));
-        return;
-      }
+    onSuccess: () => {
       toast.success(t('auth.register.welcomeToast'));
       refresh().then(() => {
         navigate('/dashboard');
       });
     },
-    onError: () => {
-      toast.error(t('auth.register.error'));
+    onError: (error: any) => {
+      toast.error(error ?? t('auth.register.error'));
     },
   });
 
