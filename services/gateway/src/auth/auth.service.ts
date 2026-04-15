@@ -9,6 +9,8 @@ import { LoginDto } from './dto/login.dto';
 import { RegisterAsTraineeDto } from './dto/registerAsTrainee.dto';
 import { RegisterAsTrainerDto } from './dto/registerAsTrainer.dto';
 import { ResetPasswordDto } from './dto/resetPassword.dto';
+import { JwtService } from '@nestjs/jwt';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class AuthService {
@@ -17,39 +19,58 @@ export class AuthService {
     constructor(
         @Inject(AUTH_SERVICE)
         private readonly authClient: ClientProxy,
+        private readonly jwtService: JwtService,
+        private readonly userService: UserService,
     ) { }
 
-    login(loginDto: LoginDto) {
+    async login(loginDto: LoginDto) {
         try {
-            return rpcCall<AuthResponse>(
+            const { accessToken, refreshToken } = await rpcCall<AuthResponse>(
                 this.authClient,
                 AuthPatterns.login,
                 loginDto,
                 AuthResponseSchema,
             )
+            const payload = this.jwtService.decode(accessToken);
+            const user = await this.userService.findOne(payload.sub);
+
+            return { accessToken, refreshToken, user };
         } catch (error) {
             this.logger.error(error);
             throw error;
         }
     }
 
-    refresh(refreshToken: string) {
-        return rpcCall<AuthResponse>(
-            this.authClient,
-            AuthPatterns.refresh,
-            refreshToken,
-            AuthResponseSchema,
-        )
+    async refresh(oldRefreshToken: string) {
+        try {
+            const { accessToken, refreshToken } = await rpcCall<AuthResponse>(
+                this.authClient,
+                AuthPatterns.refresh,
+                oldRefreshToken,
+                AuthResponseSchema,
+            )
+            const payload = this.jwtService.decode(accessToken);
+            const user = await this.userService.findOne(payload.sub);
+
+            return { accessToken, refreshToken, user };
+        } catch (error) {
+            this.logger.error(error);
+            throw error;
+        }
     }
 
-    registerAsTrainee(registerDto: RegisterAsTraineeDto) {
+    async registerAsTrainee(registerDto: RegisterAsTraineeDto) {
         try {
-            return rpcCall<AuthResponse>(
+            const { accessToken, refreshToken } = await rpcCall<AuthResponse>(
                 this.authClient,
                 AuthPatterns.registerAsTrainee,
                 registerDto,
                 AuthResponseSchema,
             )
+            const payload = this.jwtService.decode(accessToken);
+            const user = await this.userService.findOne(payload.sub);
+
+            return { accessToken, refreshToken, user };
         } catch (error) {
             this.logger.error(error);
             throw error;
@@ -81,5 +102,9 @@ export class AuthService {
         return firstValueFrom(
             this.authClient.send(AuthPatterns.logout, { userId })
         )
+    }
+
+    isMobile(userAgent: string) {
+        return /mobile|android|iphone|ipad/i.test(userAgent);
     }
 }

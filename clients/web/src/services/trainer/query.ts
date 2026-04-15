@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import axiosClient from '@/lib/axiosClient';
 import {
     TrainerWithUser,
@@ -13,7 +14,7 @@ import {
 export async function findAllTrainers(isActive?: boolean) {
     try {
         const { data } = await axiosClient.get<TrainerWithUser[]>('/trainers', { params: { isActive } })
-        return data
+        return data ?? []
     } catch (error: any) {
         console.log(error)
         throw error.response?.data?.message || 'Failed to fetch trainers'

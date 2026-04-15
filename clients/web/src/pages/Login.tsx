@@ -3,14 +3,14 @@ import EgyptianDivider from '@/components/ui/EgyptianDivider';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
 import { login } from '@/services/auth';
+import { UserRole } from '@/services/user';
+import { useMutation } from '@tanstack/react-query';
 import { Eye, EyeOff, LogIn } from 'lucide-react';
 import { Activity, useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router';
 import { toast } from 'sonner';
-import { useMutation } from '@tanstack/react-query';
-import { UserRole } from '@/services/user';
 
 type Inputs = {
   email: string;
@@ -22,7 +22,7 @@ const Login = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
-  const { refresh } = useAuth();
+  const { setAuthDirect } = useAuth();
 
   const {
     register,
@@ -39,31 +39,26 @@ const Login = () => {
   const { mutate, isPending } = useMutation({
     mutationFn: (data: Pick<Inputs, 'email' | 'password'>) =>
       login({ email: data.email, password: data.password }),
-    onSuccess: () => {
+    onSuccess: ({ user }) => {
+      setAuthDirect(user);
       toast.success(t('auth.login.welcomeToast'));
-      refresh().then((authState) => {
-        if (!authState.user) {
-          navigate('/');
-          return;
-        }
 
-        switch (authState.user.role) {
-          case UserRole.trainee:
-            navigate('/dashboard');
-            break;
-          case UserRole.trainer:
-            navigate('/workout-plans');
-            break;
-          case UserRole.admin:
-            navigate('/admin');
-            break;
-          default:
-            navigate('/');
-        }
-      });
+      switch (user.role) {
+        case UserRole.trainee:
+          navigate('/dashboard');
+          break;
+        case UserRole.trainer:
+          navigate('/workout-plans');
+          break;
+        case UserRole.admin:
+          navigate('/admin');
+          break;
+        default:
+          navigate('/');
+      }
     },
     onError: (error: any) => {
-      toast.error(error ?? t('auth.login.error'));
+      toast.error(error ?? t('auth.login.commonError'));
     },
   });
 

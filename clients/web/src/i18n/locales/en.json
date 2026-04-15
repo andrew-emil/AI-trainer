@@ -227,7 +227,8 @@
       "emailInvalid": "This Email is invalid",
       "passwordRequired": "Password is required",
       "passwordMinLength": "Password must be at least 8 characters long",
-      "error": "Invalid email or password"
+      "error": "Invalid email or password",
+      "commonError": "Something went wrong"
     },
     "register": {
       "title": "Join the Dynasty",

@@ -1,8 +1,9 @@
 import { TraineeGoal } from "@/services/trainee";
-import { CreateUserDto } from "@/services/user";
+import { CreateUserDto, IUser } from "@/services/user";
 
 export interface AuthResponse {
-    message: string
+    message: string;
+    user: IUser
 }
 
 export interface LoginDto {
