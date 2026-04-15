@@ -1,7 +1,7 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { Throttle, seconds } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
-import { cookieOptions } from 'src/common/constants/cookieOption';
+import { accessTokenCookieOptions, refreshTokenCookieOptions } from 'src/common/constants/cookieOption';
 import type { CustomRequest } from 'src/common/types/customRequest.type';
 import { AuthService } from './auth.service';
 import { ForgetPasswordDto } from './dto/forgetPassword.dto';
@@ -20,11 +20,16 @@ export class AuthController {
 
     @Throttle({ auth: { limit: 5, ttl: seconds(60) } }) // 5 attempts/min
     @Post('login')
-    async login(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: Response) {
-        const { accessToken, refreshToken } = await this.authService.login(loginDto);
-        res.cookie(this.accessTokenName, accessToken, cookieOptions);
-        res.cookie(this.refreshTokenName, refreshToken, cookieOptions);
-        return { success: true };
+    async login(@Body() loginDto: LoginDto, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
+        const { accessToken, refreshToken, user } = await this.authService.login(loginDto);
+        const userAgent = req.headers['user-agent'] || '';
+        const isMobile = this.authService.isMobile(userAgent);
+        if (isMobile) {
+            return { accessToken, refreshToken, user };
+        }
+        res.cookie(this.accessTokenName, accessToken, accessTokenCookieOptions);
+        res.cookie(this.refreshTokenName, refreshToken, refreshTokenCookieOptions);
+        return { message: 'Login successful', user };
     }
 
     @Throttle({ auth: { limit: 5, ttl: seconds(60) } }) // 5 attempts/min
@@ -35,24 +40,33 @@ export class AuthController {
             throw new UnauthorizedException('No refresh token');
         }
 
-        const { accessToken, refreshToken: newRefreshToken } =
+        const { accessToken, refreshToken: newRefreshToken, user } =
             await this.authService.refresh(refreshToken);
 
-        res.cookie(this.accessTokenName, accessToken, cookieOptions);
-        if (newRefreshToken) {
-            res.cookie(this.refreshTokenName, newRefreshToken, cookieOptions);
+        const userAgent = req.headers['user-agent'] || '';
+        const isMobile = this.authService.isMobile(userAgent);
+        if (isMobile) {
+            return { accessToken, refreshToken, user };
         }
+        res.cookie(this.accessTokenName, accessToken, accessTokenCookieOptions);
+        res.cookie(this.refreshTokenName, newRefreshToken, refreshTokenCookieOptions);
 
-        return { success: true };
+        return { message: 'Refresh successful', user };
     }
 
     @Throttle({ auth: { limit: 3, ttl: seconds(60) } }) // 3 registrations/min
     @Post('register-as-trainee')
-    async registerAsTrainee(@Body() registerDto: RegisterAsTraineeDto, @Res({ passthrough: true }) res: Response) {
-        const { accessToken, refreshToken } = await this.authService.registerAsTrainee(registerDto);
-        res.cookie(this.accessTokenName, accessToken, cookieOptions);
-        res.cookie(this.refreshTokenName, refreshToken, cookieOptions);
-        return { success: true };
+    async registerAsTrainee(@Body() registerDto: RegisterAsTraineeDto, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
+        const { accessToken, refreshToken, user } = await this.authService.registerAsTrainee(registerDto);
+        const userAgent = req.headers['user-agent'] || '';
+        const isMobile = this.authService.isMobile(userAgent);
+        if (isMobile) {
+            return { accessToken, refreshToken, user };
+        }
+        res.cookie(this.accessTokenName, accessToken, accessTokenCookieOptions);
+        res.cookie(this.refreshTokenName, refreshToken, refreshTokenCookieOptions);
+
+        return { message: 'Registration successful', user };
     }
 
     @Throttle({ auth: { limit: 3, ttl: seconds(60) } }) // 3 registrations/min
@@ -78,8 +92,8 @@ export class AuthController {
     @Post('logout')
     @HttpCode(HttpStatus.OK)
     logout(@Req() req: CustomRequest, @Res({ passthrough: true }) res: Response) {
-        res.clearCookie(this.accessTokenName, cookieOptions);
-        res.clearCookie(this.refreshTokenName, cookieOptions);
+        res.clearCookie(this.accessTokenName, accessTokenCookieOptions);
+        res.clearCookie(this.refreshTokenName, refreshTokenCookieOptions);
         return this.authService.logout(req.user.sub);
     }
 }

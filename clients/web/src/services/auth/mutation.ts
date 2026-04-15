@@ -23,7 +23,7 @@ export async function registerAsTrainee(registerAsTraineeDto: RegisterAsTraineeD
 
 export async function registerAsTrainer(registerAsTrainerDto: RegisterAsTrainerDto) {
     try {
-        const { data } = await axiosClient.post<AuthResponse>('/auth/register-as-trainer', registerAsTrainerDto)
+        const { data } = await axiosClient.post<{ message: string }>('/auth/register-as-trainer', registerAsTrainerDto)
         return data
     } catch (error) {
         console.log(error)
@@ -33,7 +33,7 @@ export async function registerAsTrainer(registerAsTrainerDto: RegisterAsTrainerD
 
 export async function forgetPassword(email: string) {
     try {
-        const { data } = await axiosClient.post<AuthResponse>('/auth/forget-password', { email })
+        const { data } = await axiosClient.post<{ message: string }>('/auth/forget-password', { email })
         return data
     } catch (error) {
         console.log(error)
@@ -43,7 +43,7 @@ export async function forgetPassword(email: string) {
 
 export async function resetPassword(token: string, password: string) {
     try {
-        const { data } = await axiosClient.post<AuthResponse>('/auth/reset-password', { token, password })
+        const { data } = await axiosClient.post<{ message: string }>('/auth/reset-password', { token, password })
         return data
     } catch (error) {
         console.log(error)
@@ -63,7 +63,7 @@ export async function refreshAccessToken() {
 
 export async function logout() {
     try {
-        const { data } = await axiosClient.post<AuthResponse>('/auth/logout', {}, { withCredentials: true })
+        const { data } = await axiosClient.post<{ message: string }>('/auth/logout', {}, { withCredentials: true })
         return data
     } catch (error) {
         console.log(error)
