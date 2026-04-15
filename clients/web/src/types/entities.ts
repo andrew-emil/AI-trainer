@@ -1,44 +1,13 @@
 export type Json = unknown;
 
 /* Enums */
-
-export enum UserRole {
-  trainer = 'trainer',
-  trainee = 'trainee',
-  admin = 'admin',
-}
-
-export enum TraineeGoal {
-  cut = 'cut',
-  bulk = 'bulk',
-  maintenance = 'maintenance',
-  strength = 'strength',
-  body_recomb = 'body_recomb',
-}
-
-export enum Gender {
-  male = 'male',
-  female = 'female',
-  unknown = 'unknown',
-}
-
 export enum TrainerRequestStatus {
   pending = 'pending',
   approved = 'approved',
   rejected = 'rejected',
 }
 
-export enum MembershipStatus {
-  active = 'active',
-  inactive = 'inactive',
-}
 
-export enum RequestStatus {
-  pending = 'pending',
-  approved = 'approved',
-  rejected = 'rejected',
-  cancelled_by_the_trainee = 'cancelled_by_the_trainee',
-}
 
 export enum ActivityType {
   WORKOUT_COMPLETED = 'WORKOUT_COMPLETED',
@@ -97,61 +66,6 @@ export enum NotificationStatus {
 
 /* Models */
 
-export interface User {
-  id: string;
-  firstName: string;
-  lastName: string;
-  username: string;
-  email: string;
-  passwordHash: string;
-  role: UserRole;
-  gender: Gender;
-  avatar: string | null;
-  avatarPublicId: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface Trainee {
-  userId: string;
-  goal: TraineeGoal;
-  heightCm: number | null;
-  isActive: boolean;
-  createdAt: string;
-}
-
-export interface Trainer {
-  userId: string;
-  bio: string;
-  experienceYears: number;
-  ratingAvg: number;
-  ratingCount: number;
-  rankScore: number;
-  isActive: boolean;
-  createdAt: string;
-}
-
-export interface TrainerCertification {
-  id: string;
-  trainerId: string;
-  name: string;
-  imageUrl: string;
-  imagePublicId: string;
-  issuedBy: string | null;
-  issuedAt: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-
-export interface TrainerTransformation {
-  id: string;
-  trainerId: string;
-  name: string;
-  imageUrl: string;
-  imagePublicId: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
 
 export interface ResetPasswordToken {
   id: string;
@@ -173,25 +87,6 @@ export interface TrainerRequest {
   updatedAt: string;
 }
 
-export interface TrainerTrainee {
-  id: string;
-  trainerId: string;
-  traineeId: string;
-  membershipStatus: MembershipStatus;
-  sessionsCount: number;
-  assignedAt: string | null;
-  createdAt: string;
-}
-
-export interface TrainerTraineeRequest {
-  id: string;
-  trainerId: string;
-  traineeId: string;
-  sessionsCount: number;
-  status: RequestStatus;
-  createdAt: string;
-  respondedAt: string | null;
-}
 
 export interface Exercise {
   id: string;
@@ -219,14 +114,6 @@ export interface Equipment {
   name: string;
 }
 
-export interface WorkoutPlan {
-  id: string;
-  trainerId: string;
-  name: string;
-  goal: TraineeGoal;
-  weeks: number;
-  createdAt: string;
-}
 
 export interface WorkoutDay {
   id: string;
@@ -246,23 +133,6 @@ export interface WorkoutDayExercise {
   orderIndex: number;
 }
 
-export interface TraineeWorkoutPlan {
-  id: string;
-  planId: string;
-  traineeId: string;
-  startDate: string;
-  endDate: string | null;
-  active: boolean;
-}
-
-export interface TraineeNutritionPlan {
-  id: string;
-  traineeId: string;
-  nutritionPlanId: string;
-  startDate: string;
-  endDate: string | null;
-  active: boolean;
-}
 
 export interface WorkoutLog {
   id: string;
@@ -314,14 +184,6 @@ export interface WorkoutSet {
   createdAt: string;
 }
 
-export interface BodyWeightLog {
-  id: string;
-  traineeId: string;
-  weight: number;
-  smm: number | null;
-  pbf: number | null;
-  loggedAt: string;
-}
 
 export interface ActivityLog {
   id: string;
@@ -333,23 +195,6 @@ export interface ActivityLog {
   createdAt: string;
 }
 
-export interface TrainerReview {
-  id: string;
-  trainerId: string;
-  traineeId: string;
-  rating: number;
-  comment: string | null;
-  createdAt: string;
-}
-
-export interface TrainerMetrics {
-  id: string;
-  trainerId: string;
-  activeTraineesCount: number;
-  successRate: number;
-  createdAt: string;
-  updatedAt: string;
-}
 
 export interface Conversation {
   id: string;
@@ -409,23 +254,6 @@ export interface FoodNutrient {
   unit: string;
 }
 
-export interface NutritionPlan {
-  id: string;
-  trainerId: string;
-  name: string;
-  description?: string;
-  note?: string;
-  goal: TraineeGoal;
-  weeks: number;
-  assignedTo: string[];
-  totals?: {
-    calories: number;
-    protein: number;
-    carbs: number;
-    fat: number;
-  };
-  createdAt: string;
-}
 
 export interface NutritionDay {
   id: string;

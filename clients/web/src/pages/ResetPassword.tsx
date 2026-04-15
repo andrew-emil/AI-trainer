@@ -1,16 +1,14 @@
 import FormWrapper from '@/components/forms/FormWrapper';
 import { Input } from '@/components/ui/input';
-import { ErrorResponse } from '@/types/errorResponse';
+import { resetPassword } from '@/services/auth';
+import { useMutation } from '@tanstack/react-query';
 import { Eye, EyeOff, KeyRound } from 'lucide-react';
 import { Activity, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import {
-  useActionData,
   useNavigate,
-  useNavigation,
   useSearchParams,
-  useSubmit,
 } from 'react-router';
 import { toast } from 'sonner';
 
@@ -18,19 +16,14 @@ type ResetPasswordForm = {
   password: string;
   confirmPassword: string;
 };
-
 function ResetPassword() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
-  const action = useActionData<{ message: string } | ErrorResponse>();
-  const { state } = useNavigation();
   const navigate = useNavigate();
-  const [isLoading] = useState(state === 'submitting' || state === 'loading');
 
   if (!token) {
     navigate('/not-found');
   }
-  const submit = useSubmit();
   const { t } = useTranslation();
   const {
     register,
@@ -51,23 +44,24 @@ function ResetPassword() {
     if (!token) navigate('/not-found', { replace: true });
   }, [token, navigate]);
 
-  // React to action result AFTER the router action finishes
-  useEffect(() => {
-    if (!action) return;
-
-    if ('statusCode' in action) {
-      toast.error(action.message);
-      return;
-    }
-
-    toast.success(t('auth.resetPassword.successToast'));
-    reset();
-    navigate('/login', { replace: true });
-  }, [action, navigate, reset, t]);
+  const { mutate, isPending: isLoading } = useMutation({
+    mutationFn: (data: ResetPasswordForm) => {
+      if (!token) throw new Error('No token found');
+      return resetPassword(token, data.password);
+    },
+    onSuccess: () => {
+      toast.success(t('auth.resetPassword.successToast'));
+      reset();
+      navigate('/login', { replace: true });
+    },
+    onError: (error: any) => {
+      toast.error(error ?? t('auth.resetPassword.error'));
+    },
+  });
 
   const onSubmit = (data: ResetPasswordForm) => {
     if (!token) return;
-    submit({ token, password: data.password }, { method: 'post' });
+    mutate(data);
   };
 
   return (

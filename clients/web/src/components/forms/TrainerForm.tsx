@@ -1,25 +1,23 @@
 import { ImageType, uploadImageToCloudinary } from '@/lib/cloudinary';
-import { registerAsTrainer } from '@/services/auth';
-import { CreateTransformationDto } from '@/types/auth';
-import { Gender, UserRole } from '@/types/entities';
-import { CreateTrainerDto } from '@/types/trainer';
-import { CreateUserDto } from '@/types/user';
-import { UserPlus, X } from 'lucide-react';
+import { validateImage } from '@/lib/utils';
+import { ImageDto, registerAsTrainer } from '@/services/auth';
+import { CreateTrainerDto } from '@/services/trainer';
+import { CreateUserDto, Gender, UserRole } from '@/services/user';
+import { useMutation } from '@tanstack/react-query';
+import { UserPlus } from 'lucide-react';
 import { Activity, useState } from 'react';
 import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
-import { useMutation } from '@tanstack/react-query';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 import UserForm from './UserForm';
-import { validateImage } from '@/lib/utils';
 
 export type TrainerInputs = CreateUserDto &
   CreateTrainerDto & {
     confirmPassword: string;
-    transformations: CreateTransformationDto[];
+    transformations: ImageDto[];
   };
 
 function TrainerForm() {
@@ -100,16 +98,12 @@ function TrainerForm() {
         })),
         role: UserRole.trainer,
       }),
-    onSuccess: ({ error }) => {
-      if (error) {
-        toast.error(error.data ?? t('auth.register.error'));
-        return;
-      }
+    onSuccess: () => {
       toast.success(t('auth.register.registerTrainerSuccessToast'));
       navigate('/');
     },
-    onError: () => {
-      toast.error(t('auth.register.error'));
+    onError: (error: any) => {
+      toast.error(error ?? t('auth.register.error'));
     },
   });
 

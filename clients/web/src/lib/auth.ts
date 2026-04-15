@@ -1,18 +1,17 @@
-import { getMyUser } from '@/services/user';
+import { getMyUser, IUser } from '@/services/user';
 import { AuthStatus } from '@/types/auth';
-import { SafeUser } from '@/types/user';
 
 /* ---------- Types ---------- */
 
 export type AuthState = {
   status: AuthStatus;
-  user: SafeUser | null;
+  user: IUser | null;
 };
 
 /* ---------- Module Cache ---------- */
 
-let cachedUser: SafeUser | null = null;
-let inflight: Promise<SafeUser | null> | null = null;
+let cachedUser: IUser | null = null;
+let inflight: Promise<IUser | null> | null = null;
 
 /* ---------- Auth Resolver ---------- */
 
@@ -23,10 +22,11 @@ export async function getAuth(): Promise<AuthState> {
 
   if (!inflight) {
     inflight = getMyUser()
-      .then(({ data, error }) => {
-        if (error || !data) return null;
+      .then((data) => {
+        if (!data) return null;
         return data;
       })
+      .catch(() => null)
       .finally(() => {
         inflight = null;
       });

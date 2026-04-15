@@ -10,7 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { useMutation } from '@tanstack/react-query';
-import { UserRole } from '@/types/entities';
+import { UserRole } from '@/services/user';
 
 type Inputs = {
   email: string;
@@ -39,12 +39,7 @@ const Login = () => {
   const { mutate, isPending } = useMutation({
     mutationFn: (data: Pick<Inputs, 'email' | 'password'>) =>
       login({ email: data.email, password: data.password }),
-    onSuccess: ({ data, error }) => {
-      if (error) {
-        toast.error(error.status ?? t('auth.login.error'));
-        return;
-      }
-
+    onSuccess: () => {
       toast.success(t('auth.login.welcomeToast'));
       refresh().then((authState) => {
         if (!authState.user) {
@@ -67,8 +62,8 @@ const Login = () => {
         }
       });
     },
-    onError: () => {
-      toast.error(t('auth.login.error'));
+    onError: (error: any) => {
+      toast.error(error ?? t('auth.login.error'));
     },
   });
 
