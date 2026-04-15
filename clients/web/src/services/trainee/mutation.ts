@@ -1,13 +1,12 @@
 import axiosClient from '@/lib/axiosClient';
 import {
-    CreateTraineeDto,
-    UpdateTraineeDto,
     CreateTrainerReviewDto,
-    UpdateTrainerReviewDto,
-    Trainee,
     GetReviewsForTrainee,
-    TrainerTraineeRequest
+    Trainee,
+    UpdateTraineeDto,
+    UpdateTrainerReviewDto
 } from './types';
+import { TrainerTraineeRequest } from '../trainer';
 
 export async function updateTrainee(dto: UpdateTraineeDto) {
     try {

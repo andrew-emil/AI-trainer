@@ -1,18 +1,19 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
+import EgyptianDivider from '@/components/ui/EgyptianDivider';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import EgyptianDivider from '@/components/ui/EgyptianDivider';
+import { useToast } from '@/hooks/use-toast';
 import {
   useCreateNutritionPlan,
   useUpdateNutritionPlan,
 } from '@/hooks/useNutritionPlans';
-import { useToast } from '@/hooks/use-toast';
-import { TraineeGoal, NutritionPlan } from '@/types/entities';
+import { TraineeGoal } from '@/services/trainee';
+import { NutritionPlan } from '@/services/trainer';
+import { AnimatePresence, motion } from 'framer-motion';
+import { X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
 
 interface CreateNutritionPlanModalProps {
   isOpen: boolean;
@@ -39,6 +40,7 @@ const CreateNutritionPlanModal = ({
 
   useEffect(() => {
     if (plan) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setName(plan.name);
       setGoal(plan.goal);
       setWeeks(plan.weeks);

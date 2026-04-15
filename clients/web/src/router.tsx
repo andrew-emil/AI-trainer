@@ -34,8 +34,6 @@ import WorkoutPlanDetails from '@/pages/WorkoutPlanDetails';
 import WorkoutPlans from '@/pages/WorkoutPlans';
 import TrainerRequestDetails from '@/pages/admin/TrainerRequestDetails';
 
-// actions
-
 // loaders
 import { requireAuthLoader } from '@/loaders/requireAuth.loader';
 import MyReviews from './pages/MyReviews';

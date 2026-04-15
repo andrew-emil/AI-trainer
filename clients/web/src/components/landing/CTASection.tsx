@@ -3,7 +3,7 @@ import { ArrowRight, Crown, LayoutDashboard } from 'lucide-react';
 import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
-import { UserRole } from '@/types/entities';
+import { UserRole } from '@/services/user';
 
 const CTASection = () => {
   const { t } = useTranslation();

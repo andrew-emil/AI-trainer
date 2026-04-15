@@ -1,4 +1,5 @@
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import { Button } from '@/components/ui/button';
 import {
   Carousel,
   CarouselContent,
@@ -6,8 +7,6 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel';
-import { Button } from '@/components/ui/button';
-import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -18,10 +17,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import EgyptianCard from '@/components/ui/EgyptianCard';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import StarRating from '@/components/ui/StarRating';
 import {
   Select,
   SelectContent,
@@ -29,45 +25,45 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import StarRating from '@/components/ui/StarRating';
+import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/useAuth';
+import i18n from '@/i18n';
 import {
+  createReview,
   createTrainerRequest,
   getAssignedTrainers,
-  createReview,
+  GetAssignedTrainersResponse
 } from '@/services/trainee';
-import { findTrainerById, getReviewsForTrainer } from '@/services/trainer';
-import { TrainerWithUser, GetReviewsForTrainer } from '@/types/trainer';
-import { UserRole, MembershipStatus } from '@/types/entities';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Apple,
+  findTrainerById,
+  getReviewsForTrainer,
+  GetReviewsForTrainer,
+  TrainerWithUser,
+} from '@/services/trainer';
+import { UserRole } from '@/services/user';
+import { formatDistanceToNow } from 'date-fns';
+import { ar, enUS } from 'date-fns/locale';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
   Award,
   Calendar,
-  Camera,
-  Dumbbell,
-  Edit,
-  Mail,
-  MapPin,
-  Phone,
-  User,
-  Users,
-  UserPlus,
-  Loader2,
-  History as HistoryIcon,
   ChevronLeft,
-  MessageSquare,
-  Star,
   Crown,
+  Edit,
+  History as HistoryIcon,
+  Loader2,
+  Mail,
+  MessageSquare,
   Quote,
-  Clock,
-  ShieldCheck,
-  CheckCircle2,
+  Star,
+  User,
+  UserPlus,
+  Users,
 } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-import { enUS, ar } from 'date-fns/locale';
-import i18n from '@/i18n';
-import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router';
+import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Link, useParams } from 'react-router';
 import { toast } from 'sonner';
 
 const TrainerProfile = () => {
@@ -75,10 +71,11 @@ const TrainerProfile = () => {
   const { t } = useTranslation();
   const { auth } = useAuth();
   const user = auth?.user;
+
   const [trainer, setTrainer] = useState<TrainerWithUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAssigned, setIsAssigned] = useState(false);
-  const [assignmentData, setAssignmentData] = useState<any>(null);
+  const [assignmentData, setAssignmentData] = useState<GetAssignedTrainersResponse | null>(null);
   const [reviews, setReviews] = useState<GetReviewsForTrainer[]>([]);
   const [sessionsCount, setSessionsCount] = useState<string>('20');
   const [isRequesting, setIsRequesting] = useState(false);
@@ -87,72 +84,70 @@ const TrainerProfile = () => {
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewComment, setReviewComment] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [selectedImageTitle, setSelectedImageTitle] = useState<string | null>(
-    null,
-  );
+  const [selectedImageTitle, setSelectedImageTitle] = useState<string | null>(null);
   const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
 
-  const fetchData = async () => {
+  // useCallback prevents fetchData identity changing on every render,
+  // which would cause the useEffect to loop infinitely.
+  const fetchData = useCallback(async () => {
     if (!id) return;
     setIsLoading(true);
+
+    let data: TrainerWithUser;
     try {
-      const { data, error } = await findTrainerById(id);
-      if (error) {
-        toast.error(t('profile.trainer.fetchError'));
-        return;
-      }
+      data = await findTrainerById(id);
       if (data) setTrainer(data);
+    } catch (err) {
+      console.error(err);
+      toast.error(t('profile.trainer.fetchError'));
+      setIsLoading(false);
+      return;
+    }
 
-      // Fetch reviews
-      const { data: reviewsData } = await getReviewsForTrainer(id);
+    try {
+      const reviewsData = await getReviewsForTrainer(id);
       if (reviewsData) setReviews(reviewsData);
+    } catch {
+      // Non-fatal — reviews section simply stays empty
+    }
 
-      // Check assignment status if user is trainee
-      if (user?.role === UserRole.trainee) {
-        const { data: assignment } = await getAssignedTrainers();
+    if (user?.role === UserRole.trainee) {
+      try {
+        const assignment = await getAssignedTrainers();
         const assignedToThisTrainer =
           assignment &&
           (assignment.trainerId === data.userId ||
             assignment.trainer?.userId === data.userId ||
             assignment.trainerId === id);
+
         setIsAssigned(!!assignedToThisTrainer);
-        if (assignedToThisTrainer) {
-          setAssignmentData(assignment);
-        } else {
-          setAssignmentData(null);
-        }
+        setAssignmentData(assignedToThisTrainer ? assignment : null);
+      } catch {
+        // Non-fatal — treat as unassigned
+        setIsAssigned(false);
+        setAssignmentData(null);
       }
-    } catch (err) {
-      console.error(err);
-      toast.error(t('profile.trainer.requestError'));
-    } finally {
-      setIsLoading(false);
     }
-  };
+
+    setIsLoading(false);
+  }, [id, user?.role, t]);
 
   useEffect(() => {
     fetchData();
-  }, [id, user]);
+  }, [fetchData]);
 
   const handleRequestTrainer = async () => {
     if (!trainer) return;
     setIsRequesting(true);
     try {
-      const { error } = await createTrainerRequest(
-        trainer.userId,
-        Number(sessionsCount),
-      );
-      if (error) {
-        toast.error(error.message || t('profile.trainer.requestError'));
-      } else {
-        toast.success(t('profile.trainer.requestSuccess'));
-        setIsRequestDialogOpen(false);
-        // Refresh data to reflect the new request status
-        await fetchData();
-      }
+      await createTrainerRequest(trainer.userId, Number(sessionsCount));
+      toast.success(t('profile.trainer.requestSuccess'));
+      setIsRequestDialogOpen(false);
+      await fetchData();
     } catch (err) {
-      console.error(err);
-      toast.error(t('profile.trainer.requestError'));
+      toast.error(
+        typeof err === 'string' ? err : t('profile.trainer.requestError'),
+      );
     } finally {
       setIsRequesting(false);
     }
@@ -162,23 +157,20 @@ const TrainerProfile = () => {
     if (!trainer) return;
     setIsRequesting(true);
     try {
-      const { error } = await createReview({
+      await createReview({
         trainerId: trainer.userId,
         rating: reviewRating,
         comment: reviewComment,
       });
-      if (error) {
-        toast.error(error.message || t('reviews.reviewError'));
-      } else {
-        toast.success(t('reviews.reviewSuccess'));
-        setIsReviewDialogOpen(false);
-        setReviewRating(0);
-        setReviewComment('');
-        await fetchData();
-      }
-    } catch (err: any) {
-      console.error(err);
-      toast.error(t('reviews.reviewError'));
+      toast.success(t('reviews.reviewSuccess'));
+      setIsReviewDialogOpen(false);
+      setReviewRating(0);
+      setReviewComment('');
+      await fetchData();
+    } catch (err) {
+      toast.error(
+        typeof err === 'string' ? err : t('reviews.reviewError'),
+      );
     } finally {
       setIsRequesting(false);
     }
@@ -203,7 +195,14 @@ const TrainerProfile = () => {
       </DashboardLayout>
     );
   }
+
   const isTrainee = user?.role === UserRole.trainee;
+
+  // A trainee with active sessions should renew, not re-request
+  const hasActiveMembership =
+    isAssigned &&
+    assignmentData != null &&
+    (assignmentData.sessionsCount > 0);
 
   return (
     <DashboardLayout>
@@ -262,198 +261,177 @@ const TrainerProfile = () => {
                   </p>
                 </div>
 
-                {(user?.id === trainer.userId ||
-                  user?.role === UserRole.admin) && (
-                  <Button
-                    asChild
-                    className="bg-gradient-to-r from-egyptian-gold to-egyptian-gold-light text-black hover:shadow-[0_0_20px_rgba(212,175,55,0.4)]"
-                  >
-                    <Link to="/settings">
-                      <Edit className="w-4 h-4 mr-2" />
-                      {t('profile.trainer.editProfile')}
-                    </Link>
-                  </Button>
-                )}
-
-                {isTrainee && (
-                  <Dialog
-                    open={isRequestDialogOpen}
-                    onOpenChange={setIsRequestDialogOpen}
-                  >
-                    <DialogTrigger asChild>
+                <div className="flex flex-wrap gap-3">
+                  {(user?.id === trainer.userId ||
+                    user?.role === UserRole.admin) && (
                       <Button
-                        disabled={
-                          isAssigned &&
-                          (assignmentData?.sessionsCount > 0 ||
-                            assignmentData?.membershipStatus ===
-                              MembershipStatus.active)
-                        }
-                        className="bg-gradient-to-r text-black from-egyptian-gold to-egyptian-gold-light hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] disabled:opacity-50 disabled:cursor-not-allowed"
+                        asChild
+                        className="bg-gradient-to-r from-egyptian-gold to-egyptian-gold-light text-black hover:shadow-[0_0_20px_rgba(212,175,55,0.4)]"
                       >
-                        {isAssigned ? (
-                          <HistoryIcon className="w-4 h-4 mr-2" />
-                        ) : (
-                          <UserPlus className="w-4 h-4 mr-2" />
-                        )}
-                        {isAssigned
-                          ? t('dashboard.renewalMembershipDialog.title')
-                          : t('dashboard.renewalMembershipDialog.requestTitle')}
+                        <Link to="/settings">
+                          <Edit className="w-4 h-4 mr-2" />
+                          {t('profile.trainer.editProfile')}
+                        </Link>
                       </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>
-                          {isAssigned
-                            ? t(
-                                'dashboard.renewalMembershipDialog.renewTitle',
-                                {
-                                  trainer: trainer.user.firstName,
-                                },
-                              )
-                            : t(
-                                'dashboard.renewalMembershipDialog.requestWith',
-                                {
-                                  trainer: trainer.user.firstName,
-                                },
-                              )}
-                        </DialogTitle>
-                        <DialogDescription>
-                          {isAssigned
-                            ? t('dashboard.renewalMembershipDialog.renewDesc')
-                            : t(
-                                'dashboard.renewalMembershipDialog.requestDesc',
-                              )}
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="grid gap-4 py-4">
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="sessions" className="text-right">
-                            {t('dashboard.renewalMembershipDialog.sessions')}
-                          </Label>
-                          <div className="col-span-3">
-                            <Select
-                              value={sessionsCount}
-                              onValueChange={setSessionsCount}
-                            >
-                              <SelectTrigger id="sessions">
-                                <SelectValue
-                                  placeholder={t(
-                                    'dashboard.renewalMembershipDialog.selectSessions',
-                                  )}
-                                />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="20">
-                                  {t(
-                                    'dashboard.renewalMembershipDialog.sessionCount',
-                                    { count: 20 },
-                                  )}
-                                </SelectItem>
-                                <SelectItem value="40">
-                                  {t(
-                                    'dashboard.renewalMembershipDialog.sessionCount',
-                                    { count: 40 },
-                                  )}
-                                </SelectItem>
-                                <SelectItem value="60">
-                                  {t(
-                                    'dashboard.renewalMembershipDialog.sessionCount',
-                                    { count: 60 },
-                                  )}
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                      </div>
-                      <DialogFooter>
+                    )}
+
+                  {isTrainee && (
+                    <Dialog
+                      open={isRequestDialogOpen}
+                      onOpenChange={setIsRequestDialogOpen}
+                    >
+                      <DialogTrigger asChild>
                         <Button
-                          type="submit"
-                          onClick={handleRequestTrainer}
-                          disabled={isRequesting}
-                          className="bg-egyptian-gold text-egyptian-night hover:bg-egyptian-gold-light"
+                          disabled={hasActiveMembership}
+                          className="bg-gradient-to-r text-black from-egyptian-gold to-egyptian-gold-light hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          {isRequesting ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : isAssigned ? (
-                            t('dashboard.renewalMembershipDialog.sendRenewal')
+                          {isAssigned ? (
+                            <HistoryIcon className="w-4 h-4 mr-2" />
                           ) : (
-                            t('dashboard.renewalMembershipDialog.sendRequest')
+                            <UserPlus className="w-4 h-4 mr-2" />
                           )}
+                          {isAssigned
+                            ? t('dashboard.renewalMembershipDialog.title')
+                            : t('dashboard.renewalMembershipDialog.requestTitle')}
                         </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                )}
-
-                {isTrainee && isAssigned && (
-                  <Dialog
-                    open={isReviewDialogOpen}
-                    onOpenChange={setIsReviewDialogOpen}
-                  >
-                    <DialogTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="border-egyptian-gold text-egyptian-gold hover:bg-egyptian-gold/10"
-                      >
-                        <MessageSquare className="w-4 h-4 mr-2" />
-                        {t('reviews.writeReview')}
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="bg-egyptian-night border-egyptian-gold/30 sm:max-w-[480px] max-h-[90vh] overflow-y-auto overflow-x-hidden scrollbar-hide">
-                      <div className="sticky top-0 z-10 bg-egyptian-night pt-6 pb-2 border-b border-egyptian-gold/10">
+                      </DialogTrigger>
+                      <DialogContent>
                         <DialogHeader>
-                          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-egyptian-gold to-egyptian-gold-light bg-clip-text text-transparent">
-                            {t('reviews.writeReview')}
+                          <DialogTitle>
+                            {isAssigned
+                              ? t('dashboard.renewalMembershipDialog.renewTitle', {
+                                trainer: trainer.user.firstName,
+                              })
+                              : t('dashboard.renewalMembershipDialog.requestWith', {
+                                trainer: trainer.user.firstName,
+                              })}
                           </DialogTitle>
-                          <DialogDescription className="text-muted-foreground/70 text-sm">
-                            {t('reviews.subtitle')}
+                          <DialogDescription>
+                            {isAssigned
+                              ? t('dashboard.renewalMembershipDialog.renewDesc')
+                              : t('dashboard.renewalMembershipDialog.requestDesc')}
                           </DialogDescription>
                         </DialogHeader>
-                      </div>
+                        <div className="grid gap-4 py-4">
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="sessions" className="text-right">
+                              {t('dashboard.renewalMembershipDialog.sessions')}
+                            </Label>
+                            <div className="col-span-3">
+                              <Select
+                                value={sessionsCount}
+                                onValueChange={setSessionsCount}
+                              >
+                                <SelectTrigger id="sessions">
+                                  <SelectValue
+                                    placeholder={t(
+                                      'dashboard.renewalMembershipDialog.selectSessions',
+                                    )}
+                                  />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {[20, 40, 60].map((count) => (
+                                    <SelectItem key={count} value={String(count)}>
+                                      {t(
+                                        'dashboard.renewalMembershipDialog.sessionCount',
+                                        { count },
+                                      )}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        </div>
+                        <DialogFooter>
+                          <Button
+                            type="submit"
+                            onClick={handleRequestTrainer}
+                            disabled={isRequesting}
+                            className="bg-egyptian-gold text-egyptian-night hover:bg-egyptian-gold-light"
+                          >
+                            {isRequesting ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : isAssigned ? (
+                              t('dashboard.renewalMembershipDialog.sendRenewal')
+                            ) : (
+                              t('dashboard.renewalMembershipDialog.sendRequest')
+                            )}
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  )}
 
-                      <div className="space-y-6 py-4">
-                        <div className="space-y-3">
-                          <Label className="text-egyptian-gold font-medium text-sm">
-                            {t('reviews.rating')}
-                          </Label>
-                          <div className="p-4 rounded-xl bg-black border border-egyptian-gold/10 flex justify-center shadow-[inset_0_0_20px_rgba(0,0,0,0.6)]">
-                            <StarRating
-                              rating={reviewRating}
-                              interactive
-                              onRatingChange={setReviewRating}
-                              size={32}
+                  {isTrainee && isAssigned && (
+                    <Dialog
+                      open={isReviewDialogOpen}
+                      onOpenChange={setIsReviewDialogOpen}
+                    >
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="border-egyptian-gold text-egyptian-gold hover:bg-egyptian-gold/10"
+                        >
+                          <MessageSquare className="w-4 h-4 mr-2" />
+                          {t('reviews.writeReview')}
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="bg-egyptian-night border-egyptian-gold/30 sm:max-w-[480px] max-h-[90vh] overflow-y-auto overflow-x-hidden scrollbar-hide">
+                        <div className="sticky top-0 z-10 bg-egyptian-night pt-6 pb-2 border-b border-egyptian-gold/10">
+                          <DialogHeader>
+                            <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-egyptian-gold to-egyptian-gold-light bg-clip-text text-transparent">
+                              {t('reviews.writeReview')}
+                            </DialogTitle>
+                            <DialogDescription className="text-muted-foreground/70 text-sm">
+                              {t('reviews.subtitle')}
+                            </DialogDescription>
+                          </DialogHeader>
+                        </div>
+
+                        <div className="space-y-6 py-4">
+                          <div className="space-y-3">
+                            <Label className="text-egyptian-gold font-medium text-sm">
+                              {t('reviews.rating')}
+                            </Label>
+                            <div className="p-4 rounded-xl bg-black border border-egyptian-gold/10 flex justify-center shadow-[inset_0_0_20px_rgba(0,0,0,0.6)]">
+                              <StarRating
+                                rating={reviewRating}
+                                interactive
+                                onRatingChange={setReviewRating}
+                                size={32}
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-3">
+                            <Label className="text-egyptian-gold font-medium text-sm">
+                              {t('reviews.comment')}
+                            </Label>
+                            <Textarea
+                              value={reviewComment}
+                              onChange={(e) => setReviewComment(e.target.value)}
+                              placeholder={t('reviews.commentPlaceholder')}
+                              className="bg-black border-egyptian-gold/10 focus:border-egyptian-gold/40 min-h-[100px] transition-all duration-300 text-white placeholder:text-muted-foreground/50"
                             />
                           </div>
                         </div>
-                        <div className="space-y-3">
-                          <Label className="text-egyptian-gold font-medium text-sm">
-                            {t('reviews.comment')}
-                          </Label>
-                          <Textarea
-                            value={reviewComment}
-                            onChange={(e) => setReviewComment(e.target.value)}
-                            placeholder={t('reviews.commentPlaceholder')}
-                            className="bg-black border-egyptian-gold/10 focus:border-egyptian-gold/40 min-h-[100px] transition-all duration-300 text-white placeholder:text-muted-foreground/50"
-                          />
-                        </div>
-                      </div>
 
-                      <DialogFooter className="pt-2 pb-2">
-                        <Button
-                          disabled={isRequesting || reviewRating === 0}
-                          onClick={handleCreateReview}
-                          className="w-full bg-gradient-to-r from-egyptian-gold to-egyptian-gold-light text-egyptian-night hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all duration-500 font-bold h-11 text-base"
-                        >
-                          {isRequesting ? (
-                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                          ) : null}
-                          {t('reviews.submitReview')}
-                        </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                )}
+                        <DialogFooter className="pt-2 pb-2">
+                          <Button
+                            disabled={isRequesting || reviewRating === 0}
+                            onClick={handleCreateReview}
+                            className="w-full bg-gradient-to-r from-egyptian-gold to-egyptian-gold-light text-egyptian-night hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all duration-500 font-bold h-11 text-base"
+                          >
+                            {isRequesting && (
+                              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                            )}
+                            {t('reviews.submitReview')}
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  )}
+                </div>
               </div>
             </div>
           </EgyptianCard>
@@ -499,7 +477,7 @@ const TrainerProfile = () => {
               value: trainer.transformations?.length || 0,
               icon: Users,
             },
-          ].map((stat, index) => (
+          ].map((stat) => (
             <EgyptianCard
               key={stat.label}
               className="p-4 text-center group hover:border-egyptian-gold/40 transition-all duration-300"
@@ -527,7 +505,6 @@ const TrainerProfile = () => {
                 <User className="w-5 h-5 text-egyptian-gold" />
                 {t('profile.trainer.contactInfo')}
               </h2>
-
               <div className="space-y-4">
                 <div className="flex items-center gap-4 p-3 rounded-lg bg-muted/50">
                   <Mail className="w-5 h-5 text-egyptian-gold" />
@@ -538,8 +515,6 @@ const TrainerProfile = () => {
                     <div className="font-medium">{trainer.user.email}</div>
                   </div>
                 </div>
-
-                {/* Hide phone for privacy unless decided otherwise, or add if available in backend */}
               </div>
             </EgyptianCard>
           </motion.div>
@@ -555,7 +530,6 @@ const TrainerProfile = () => {
                 <Award className="w-5 h-5 text-egyptian-gold" />
                 {t('profile.trainer.achievements')}
               </h2>
-
               <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-egyptian-gold/20 scrollbar-track-transparent">
                 {trainer.certifications?.map((cert, index) => (
                   <div
@@ -589,10 +563,10 @@ const TrainerProfile = () => {
                 ))}
                 {(!trainer.certifications ||
                   trainer.certifications.length === 0) && (
-                  <div className="text-muted-foreground text-center py-8">
-                    {t('profile.trainer.noCertifications')}
-                  </div>
-                )}
+                    <div className="text-muted-foreground text-center py-8">
+                      {t('profile.trainer.noCertifications')}
+                    </div>
+                  )}
               </div>
             </EgyptianCard>
           </motion.div>
@@ -612,13 +586,7 @@ const TrainerProfile = () => {
 
             {trainer.transformations && trainer.transformations.length > 0 ? (
               <div className="px-12">
-                <Carousel
-                  opts={{
-                    align: 'start',
-                    loop: true,
-                  }}
-                  className="w-full"
-                >
+                <Carousel opts={{ align: 'start', loop: true }} className="w-full">
                   <CarouselContent className="-ml-4">
                     {trainer.transformations.map((trans, index) => (
                       <CarouselItem
@@ -715,13 +683,10 @@ const TrainerProfile = () => {
                               </div>
                               <div className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5">
                                 <Calendar className="w-3 h-3" />
-                                {formatDistanceToNow(
-                                  new Date(review.createdAt),
-                                  {
-                                    addSuffix: true,
-                                    locale: i18n.language === 'ar' ? ar : enUS,
-                                  },
-                                )}
+                                {formatDistanceToNow(new Date(review.createdAt), {
+                                  addSuffix: true,
+                                  locale: i18n.language === 'ar' ? ar : enUS,
+                                })}
                               </div>
                             </div>
                           </div>
@@ -755,6 +720,7 @@ const TrainerProfile = () => {
           </EgyptianCard>
         </motion.div>
       </div>
+
       {/* Image Dialog */}
       <Dialog open={isImageDialogOpen} onOpenChange={setIsImageDialogOpen}>
         <DialogContent className="max-w-4xl bg-egyptian-night border-egyptian-gold/20 p-0 overflow-hidden">
