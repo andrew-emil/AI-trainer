@@ -32,16 +32,16 @@ import i18n from '@/i18n';
 import {
   createReview,
   createTrainerRequest,
-  getAssignedTrainers,
-  GetAssignedTrainersResponse
+  getAssignedTrainers
 } from '@/services/trainee';
+import { traineeQueryKeys } from '@/services/trainee/queryKeys';
 import {
   findTrainerById,
-  getReviewsForTrainer,
-  GetReviewsForTrainer,
-  TrainerWithUser,
+  getReviewsForTrainer
 } from '@/services/trainer';
+import { trainerQueryKeys } from '@/services/trainer/queryKeys';
 import { UserRole } from '@/services/user';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -61,7 +61,7 @@ import {
   UserPlus,
   Users,
 } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router';
 import { toast } from 'sonner';
@@ -71,12 +71,8 @@ const TrainerProfile = () => {
   const { t } = useTranslation();
   const { auth } = useAuth();
   const user = auth?.user;
+  const queryClient = useQueryClient();
 
-  const [trainer, setTrainer] = useState<TrainerWithUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAssigned, setIsAssigned] = useState(false);
-  const [assignmentData, setAssignmentData] = useState<GetAssignedTrainersResponse | null>(null);
-  const [reviews, setReviews] = useState<GetReviewsForTrainer[]>([]);
   const [sessionsCount, setSessionsCount] = useState<string>('20');
   const [isRequesting, setIsRequesting] = useState(false);
   const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
@@ -87,54 +83,55 @@ const TrainerProfile = () => {
   const [selectedImageTitle, setSelectedImageTitle] = useState<string | null>(null);
   const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
 
-  // useCallback prevents fetchData identity changing on every render,
-  // which would cause the useEffect to loop infinitely.
-  const fetchData = useCallback(async () => {
-    if (!id) return;
-    setIsLoading(true);
+  // Fetch trainer data
+  const {
+    data: trainer = null,
+    isLoading: isTrainerLoading,
+    isError: isTrainerError,
+  } = useQuery({
+    queryKey: trainerQueryKeys.detail(id!),
+    queryFn: () => findTrainerById(id!),
+    enabled: !!id,
+  });
 
-    let data: TrainerWithUser;
-    try {
-      data = await findTrainerById(id);
-      if (data) setTrainer(data);
-    } catch (err) {
-      console.error(err);
-      toast.error(t('profile.trainer.fetchError'));
-      setIsLoading(false);
-      return;
+  console.log('Trainer data:', trainer);
+
+  // Fetch reviews for this trainer
+  const { data: reviews = [] } = useQuery({
+    queryKey: trainerQueryKeys.reviews(id!),
+    queryFn: () => getReviewsForTrainer(id!),
+    enabled: !!id,
+  });
+
+  console.log('Reviews data:', reviews);
+
+  // Fetch assignment data (only for trainees)
+  const isTrainee = user?.role === UserRole.trainee;
+  const { data: assignmentRaw = null } = useQuery({
+    queryKey: traineeQueryKeys.assignedTrainers(),
+    queryFn: () => getAssignedTrainers(),
+    enabled: isTrainee,
+  });
+
+  console.log('Assignment data:', assignmentRaw);
+
+  // Derive assignment status from the fetched data
+  const isAssigned = !!(assignmentRaw && trainer && (
+    assignmentRaw.trainerId === trainer.userId ||
+    assignmentRaw.trainer?.userId === trainer.userId ||
+    assignmentRaw.trainerId === id
+  ));
+  const assignmentData = isAssigned ? assignmentRaw : null;
+  const isLoading = isTrainerLoading;
+
+  // Helper to refetch all queries after mutations
+  const refetchAll = () => {
+    queryClient.invalidateQueries({ queryKey: trainerQueryKeys.detail(id!) });
+    queryClient.invalidateQueries({ queryKey: trainerQueryKeys.reviews(id!) });
+    if (isTrainee) {
+      queryClient.invalidateQueries({ queryKey: traineeQueryKeys.assignedTrainers() });
     }
-
-    try {
-      const reviewsData = await getReviewsForTrainer(id);
-      if (reviewsData) setReviews(reviewsData);
-    } catch {
-      // Non-fatal — reviews section simply stays empty
-    }
-
-    if (user?.role === UserRole.trainee) {
-      try {
-        const assignment = await getAssignedTrainers();
-        const assignedToThisTrainer =
-          assignment &&
-          (assignment.trainerId === data.userId ||
-            assignment.trainer?.userId === data.userId ||
-            assignment.trainerId === id);
-
-        setIsAssigned(!!assignedToThisTrainer);
-        setAssignmentData(assignedToThisTrainer ? assignment : null);
-      } catch {
-        // Non-fatal — treat as unassigned
-        setIsAssigned(false);
-        setAssignmentData(null);
-      }
-    }
-
-    setIsLoading(false);
-  }, [id, user?.role, t]);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  };
 
   const handleRequestTrainer = async () => {
     if (!trainer) return;
@@ -143,7 +140,7 @@ const TrainerProfile = () => {
       await createTrainerRequest(trainer.userId, Number(sessionsCount));
       toast.success(t('profile.trainer.requestSuccess'));
       setIsRequestDialogOpen(false);
-      await fetchData();
+      refetchAll();
     } catch (err) {
       toast.error(
         typeof err === 'string' ? err : t('profile.trainer.requestError'),
@@ -166,7 +163,7 @@ const TrainerProfile = () => {
       setIsReviewDialogOpen(false);
       setReviewRating(0);
       setReviewComment('');
-      await fetchData();
+      refetchAll();
     } catch (err) {
       toast.error(
         typeof err === 'string' ? err : t('reviews.reviewError'),
@@ -186,6 +183,10 @@ const TrainerProfile = () => {
     );
   }
 
+  if (isTrainerError) {
+    toast.error(t('profile.trainer.fetchError'));
+  }
+
   if (!trainer) {
     return (
       <DashboardLayout>
@@ -196,7 +197,7 @@ const TrainerProfile = () => {
     );
   }
 
-  const isTrainee = user?.role === UserRole.trainee;
+  // isTrainee is already defined above
 
   // A trainee with active sessions should renew, not re-request
   const hasActiveMembership =
@@ -230,10 +231,9 @@ const TrainerProfile = () => {
               {/* Avatar */}
               <div className="relative -mt-16 mb-4">
                 <div className="w-32 h-32 rounded-full border-4 border-egyptian-gold bg-egyptian-night flex items-center justify-center overflow-hidden">
-                  {trainer.user.avatar ? (
+                  {trainer.user?.avatar ? (
                     <img
                       src={trainer.user.avatar}
-                      alt={trainer.user.firstName}
                       className="w-full h-full object-cover"
                     />
                   ) : (

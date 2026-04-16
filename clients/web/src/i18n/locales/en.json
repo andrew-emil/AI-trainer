@@ -85,6 +85,7 @@
     "added": "added",
     "saving": "Saving...",
     "backToDashboard": "Back to Dashboard",
+    "noDataAvailable": "No Data Available",
     "days": {
       "monday": "Monday",
       "tuesday": "Tuesday",
@@ -857,7 +858,8 @@
     "workoutSummary": "Workout Summary",
     "topExercisesByVolume": "Top Exercises by Volume",
     "volume": "Volume",
-    "sets": "Sets"
+    "sets": "Sets",
+    "selectExercise": "Select Exercise"
   },
   "weightLog": {
     "title": "Weight",

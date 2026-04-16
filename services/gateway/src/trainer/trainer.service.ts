@@ -51,13 +51,14 @@ export class TrainerService {
     )
   }
 
-  findOne(id: string) {
-    return firstValueFrom(
+  async findOne(id: string) {
+    const trainer = await firstValueFrom(
       this.authService.send(
         TrainerPattern.GET_BY_ID,
         { userId: id }
       )
     )
+    return trainer;
   }
 
   update(id: string, updateTrainerDto: UpdateTrainerDto) {

@@ -1,5 +1,4 @@
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import NotificationSettings from '@/components/settings/NotificationSettings';
 import ProfileSettings from '@/components/settings/ProfileSettings';
 import EgyptianCard from '@/components/ui/EgyptianCard';
 import EgyptianDivider from '@/components/ui/EgyptianDivider';
@@ -8,7 +7,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useLanguage } from '@/contexts/LanguageContext';
 import { motion } from 'framer-motion';
 import { Globe } from 'lucide-react';
-import { Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
 
 const Settings = () => {
@@ -75,21 +73,6 @@ const Settings = () => {
                 </div>
 
               </EgyptianCard>
-            </motion.div>
-
-            {/* Notifications Section */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <Suspense
-                fallback={
-                  <div className="w-full h-full flex items-center justify-center">
-                    <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                  </div>}>
-                <NotificationSettings />
-              </Suspense>
             </motion.div>
           </div>
         </div>

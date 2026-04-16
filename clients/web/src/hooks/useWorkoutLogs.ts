@@ -1,26 +1,20 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   createWorkoutLog,
-  getWorkoutLogById,
-  updateWorkoutLog,
   deleteWorkoutLog,
   findAllWorkoutLogsForATrainee,
-  getWorkoutSummary,
-  getProgressiveOverload,
-  getLatestProgressiveOverload,
   getLatest1RM,
+  getLatestProgressiveOverload,
+  getProgressiveOverload,
   getWeightRecommendation,
+  getWorkoutLogById,
+  getWorkoutSummary,
+  updateWorkoutLog,
 } from '@/services/workout-log';
 import {
   CreateWorkoutSessionDto,
-  UpdateWorkoutLogDto,
-  PaginatedWorkoutSessions,
-  GroupedWorkoutResult,
-  ProgressiveOverloadResult,
-  Latest1RMResult,
-  WeightRecommendation,
+  UpdateWorkoutLogDto
 } from '@/types/workout-log';
-import { WorkoutSession } from '@/types/entities';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 /* -------------------------------------------------------------------------- */
 /*                              Workout Logs CRUD                             */

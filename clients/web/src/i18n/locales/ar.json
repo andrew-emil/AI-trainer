@@ -85,6 +85,7 @@
     "added": "تمت الإضافة",
     "saving": "جاري الحفظ...",
     "backToDashboard": "العودة للوحة التحكم",
+    "noDataAvailable": "لا توجد بيانات متاحة",
     "days": {
       "monday": "الإثنين",
       "tuesday": "الثلاثاء",
@@ -859,7 +860,8 @@
     "workoutSummary": "ملخص التمارين",
     "topExercisesByVolume": "أعلى التمارين حسب الحجم",
     "volume": "الحجم",
-    "sets": "المجموعات"
+    "sets": "المجموعات",
+    "selectExercise": "اختر التمرين"
   },
   "weightLog": {
     "title": "سجل",

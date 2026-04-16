@@ -9,7 +9,7 @@ import {
 
 export async function findAllTrainees() {
     try {
-        const { data } = await axiosClient.get<TraineeWithUser[]>('/trainee')
+        const { data } = await axiosClient.get<TraineeWithUser[]>('/trainee/all')
         return data
     } catch (error: any) {
         console.log(error)
@@ -17,9 +17,10 @@ export async function findAllTrainees() {
     }
 }
 
-export async function findTraineeById(id: string) {
+export async function findTraineeById(id?: string) {
     try {
-        const { data } = await axiosClient.get<TraineeWithUser>(`/trainee/${id}`)
+        const url = id ? `/trainee/${id}` : `/trainee`;
+        const { data } = await axiosClient.get<TraineeWithUser>(url)
         return data
     } catch (error: any) {
         console.log(error)
