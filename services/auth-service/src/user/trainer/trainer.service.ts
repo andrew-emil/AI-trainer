@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
+import { Trainer } from '@prisma/client';
 import { CloudinaryProvider } from 'src/common/providers/cloudinary.provider';
 import { TrainerConversionUtil } from 'src/common/utils/trainer-conversion.util';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { UserService } from '../user.service';
 import { CreateTrainerDto } from './dto/create-trainer.dto';
 import { CreatedTrainer } from './dto/createdTrainer.dto';
 import { UpdateTrainerDto } from './dto/update-trainer.dto';
-import { UserService } from '../user.service';
-import { Trainer } from '@prisma/client';
 
 type TrainerProfile = Omit<Trainer, 'experienceYears'> & { experienceYears: number };
 
@@ -23,7 +23,7 @@ export class TrainerService {
         const { userId, bio, experienceYears, certifications, transformations } =
             dto;
 
-        return await this.prisma.trainer.create({
+        const trainer = await this.prisma.trainer.create({
             data: {
                 userId,
                 bio,
@@ -52,6 +52,8 @@ export class TrainerService {
             },
             include: { user: true },
         }) as CreatedTrainer;
+
+        return trainer
     }
 
     async findAll(isActive: boolean = false) {
@@ -68,7 +70,7 @@ export class TrainerService {
     }
 
     async findOne(id: string): Promise<TrainerProfile> {
-        const trainer = await this.prisma.trainer.findUnique({ where: { userId: id } });
+        const trainer = await this.prisma.trainer.findUnique({ where: { userId: id }, include: { user: true } });
         if (!trainer) throw new RpcException({
             status: 404,
             message: "Trainer not found",

@@ -1,14 +1,13 @@
-import { useState, useEffect, useMemo } from 'react';
-import { useParams, Link } from 'react-router';
-import { motion } from 'framer-motion';
-import {
-  TrendingUp,
-  ChevronLeft,
-  Loader2,
-  Scale,
-  Target,
-  Activity,
-} from 'lucide-react';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import BodyWeightChart from '@/components/progress/BodyWeightChart';
+import StrengthGainsChart from '@/components/progress/StrengthGainsChart';
+import VolumeChart from '@/components/progress/VolumeChart';
+import WeightProgressionChart from '@/components/progress/WeightProgressionChart';
+import WorkoutFrequencyChart from '@/components/progress/WorkoutFrequencyChart';
+import WorkoutSummaryChart from '@/components/progress/WorkoutSummaryChart';
+import EgyptianCard from '@/components/ui/EgyptianCard';
+import EgyptianDivider from '@/components/ui/EgyptianDivider';
 import {
   Select,
   SelectContent,
@@ -16,39 +15,33 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useTranslation } from 'react-i18next';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import EgyptianCard from '@/components/ui/EgyptianCard';
-import EgyptianDivider from '@/components/ui/EgyptianDivider';
-import WorkoutFrequencyChart from '@/components/progress/WorkoutFrequencyChart';
-import WeightProgressionChart from '@/components/progress/WeightProgressionChart';
-import VolumeChart from '@/components/progress/VolumeChart';
-import BodyWeightChart from '@/components/progress/BodyWeightChart';
-import StrengthGainsChart from '@/components/progress/StrengthGainsChart';
-import WorkoutSummaryChart from '@/components/progress/WorkoutSummaryChart';
 import {
-  findAllWorkoutLogsForATrainee,
-  getWorkoutSummary,
-  getProgressiveOverload,
-} from '@/services/workout-log';
-import {
-  getBodyWeightLogsByTrainee,
   analyzeWeightChanges,
+  getBodyWeightLogsByTrainee,
   getWeightTrend,
 } from '@/services/body-weight-log';
-import { findTraineeById } from '@/services/trainee';
+import { findTraineeById, traineeQueryKeys } from '@/services/trainee';
 import { getAssignedWorkoutPlanForTrainee } from '@/services/trainer';
-import { toast } from 'sonner';
 import {
-  GroupedWorkoutResult,
-  ProgressiveOverloadResult,
-} from '@/types/workout-log';
-import { BodyWeightLog } from '@/types/entities';
-import { TraineeWithUser } from '@/types/trainer';
+  findAllWorkoutLogsForATrainee,
+  getProgressiveOverload,
+  getWorkoutSummary,
+} from '@/services/workout-log';
 import { WorkoutLog } from '@/types/workout-log';
+import { motion } from 'framer-motion';
+import {
+  Activity,
+  ChevronLeft,
+  Loader2,
+  Target,
+  TrendingUp
+} from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Link, useParams } from 'react-router';
 
 import { useAuth } from '@/hooks/useAuth';
-import { format, isValid } from 'date-fns';
+import { useQuery } from '@tanstack/react-query';
 
 const TraineeProgress = () => {
   const { t, i18n } = useTranslation();
@@ -58,97 +51,100 @@ const TraineeProgress = () => {
   // Determine the target trainee ID: failing back to auth user id if no param
   const traineeId = id || auth?.user?.id;
 
-  const [loading, setLoading] = useState(true);
-  const [trainee, setTrainee] = useState<TraineeWithUser | null>(null);
+  // Set up all queries
+  const { data: trainee, isPending: loadingTrainee } = useQuery({
+    queryKey: traineeQueryKeys.detail(traineeId || ''),
+    queryFn: async () => await findTraineeById(id),
+    enabled: !!traineeId,
+  });
 
-  // Data States
-  const [rawSessions, setRawSessions] = useState<any[]>([]);
-  const [workoutSummary, setWorkoutSummary] = useState<GroupedWorkoutResult[]>(
-    [],
-  );
-  const [progressiveOverload, setProgressiveOverload] = useState<
-    ProgressiveOverloadResult[]
-  >([]);
-  const [weightLogs, setWeightLogs] = useState<BodyWeightLog[]>([]);
-  const [weightAnalysis, setWeightAnalysis] = useState<any>(null);
-  const [weightTrend, setWeightTrend] = useState<any[]>([]);
-  const [activePlan, setActivePlan] = useState<string | null>(null);
+  const { data: rawSessions = [], isPending: loadingLogs } = useQuery({
+    queryKey: ['workoutLogs', traineeId],
+    queryFn: async () => {
+      const { data, error } = await findAllWorkoutLogsForATrainee(traineeId!, { limit: 100 });
+      if (error) throw error;
+      return (data?.data as any[]) || [];
+    },
+    enabled: !!traineeId,
+  });
+
+  const { data: workoutSummary = [], isPending: loadingSummary } = useQuery({
+    queryKey: ['workoutSummary', traineeId],
+    queryFn: async () => {
+      const { data, error } = await getWorkoutSummary(traineeId!, { by: 'exerciseId' });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!traineeId,
+  });
+
+  const { data: progressiveOverload = [], isPending: loadingOverload } = useQuery({
+    queryKey: ['progressiveOverload', traineeId],
+    queryFn: async () => {
+      const { data, error } = await getProgressiveOverload(traineeId!);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!traineeId,
+  });
+
+  const { data: weightLogs = [], isPending: loadingWeightLogs } = useQuery({
+    queryKey: ['bodyWeightLogs', traineeId],
+    queryFn: async () => {
+      const { data, error } = await getBodyWeightLogsByTrainee(traineeId!);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!traineeId,
+  });
+
+  const { data: weightAnalysis = null, isPending: loadingAnalysis } = useQuery({
+    queryKey: ['weightAnalysis', traineeId],
+    queryFn: async () => {
+      const { data, error } = await analyzeWeightChanges(traineeId!);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!traineeId,
+  });
+
+  const { data: weightTrend = [], isPending: loadingTrend } = useQuery({
+    queryKey: ['weightTrend', traineeId],
+    queryFn: async () => {
+      const { data, error } = await getWeightTrend(traineeId!);
+      if (error) throw error;
+      let trendData: any[] = [];
+      if (data) {
+        if (Array.isArray((data as any).trend)) {
+          trendData = (data as any).trend;
+        } else if (Array.isArray(data)) {
+          trendData = data;
+        } else if (Array.isArray((data as any).data)) {
+          trendData = (data as any).data;
+        }
+      }
+      return trendData;
+    },
+    enabled: !!traineeId,
+  });
+
+  const { data: assignedPlans = [], isPending: loadingPlans } = useQuery({
+    queryKey: ['assignedWorkoutPlan', traineeId],
+    queryFn: async () => {
+      return await getAssignedWorkoutPlanForTrainee(traineeId!, true);
+    },
+    enabled: !!traineeId,
+  });
+
+  const activePlan = assignedPlans && assignedPlans.length > 0 ? assignedPlans[0].plan.name : null;
+
+  const loading = loadingTrainee || loadingLogs || loadingSummary || loadingOverload || loadingWeightLogs || loadingAnalysis || loadingTrend || loadingPlans;
 
   // Filter States
   const [selectedExercise, setSelectedExercise] = useState<string>('');
 
+  const activeExercise = selectedExercise || (workoutSummary && workoutSummary.length > 0 && workoutSummary[0].exerciseName ? workoutSummary[0].exerciseName : '');
   const isRTL = i18n.language === 'ar';
-
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!traineeId) return;
-      setLoading(true);
-      try {
-        const { data: traineeData, error: traineeError } =
-          await findTraineeById(traineeId);
-        if (traineeData) setTrainee(traineeData);
-        if (traineeError) throw new Error(traineeError.message);
-
-        const { data: logsData } = await findAllWorkoutLogsForATrainee(
-          traineeId,
-          {
-            limit: 100,
-          },
-        );
-        // @ts-ignore
-        setRawSessions(logsData?.data || []);
-
-        const { data: summaryData } = await getWorkoutSummary(traineeId, {
-          by: 'exerciseId',
-        });
-        if (summaryData) {
-          setWorkoutSummary(summaryData);
-          if (summaryData.length > 0 && summaryData[0].exerciseName) {
-            setSelectedExercise(summaryData[0].exerciseName);
-          }
-        }
-
-        const { data: overloadData } = await getProgressiveOverload(traineeId);
-        if (overloadData) setProgressiveOverload(overloadData);
-
-        const { data: weightData } =
-          await getBodyWeightLogsByTrainee(traineeId);
-        if (weightData) setWeightLogs(weightData);
-
-        const { data: analysisData } = await analyzeWeightChanges(traineeId);
-        if (analysisData) setWeightAnalysis(analysisData);
-
-        const { data: trendData } = await getWeightTrend(traineeId);
-        if (trendData) {
-          if (Array.isArray((trendData as any).trend)) {
-            setWeightTrend((trendData as any).trend);
-          } else if (Array.isArray(trendData)) {
-            setWeightTrend(trendData);
-          } else if (Array.isArray((trendData as any).data)) {
-            setWeightTrend((trendData as any).data);
-          } else {
-            setWeightTrend([]);
-          }
-        }
-
-        // Fetch Active Plan
-        const { data: plansData } = await getAssignedWorkoutPlanForTrainee(
-          traineeId,
-          true,
-        );
-        if (plansData && plansData.length > 0) {
-          setActivePlan(plansData[0].plan.name);
-        }
-      } catch (error) {
-        console.error(error);
-        toast.error(t('common.errorOccurred'));
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [traineeId, t]);
 
   // --- ADAPTERS ---
 
@@ -378,7 +374,7 @@ const TraineeProgress = () => {
               {t('progress.trackExercise')}
             </label>
             <Select
-              value={selectedExercise}
+              value={activeExercise}
               onValueChange={setSelectedExercise}
             >
               <SelectTrigger className="w-full md:w-[280px] bg-muted/20 border-border/30 text-foreground">
@@ -399,7 +395,7 @@ const TraineeProgress = () => {
           </div>
           <WeightProgressionChart
             workoutLogs={performanceLogs}
-            exerciseName={selectedExercise}
+            exerciseName={activeExercise}
           />
         </motion.div>
       </div>

@@ -1,30 +1,27 @@
-import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
+  addExerciseToWorkoutDay,
+  addWorkoutDay,
   createWorkoutPlan,
+  deleteWorkoutDay,
+  deleteWorkoutDayExercise,
+  deleteWorkoutPlan,
   findAllWorkoutPlans,
+  findWorkoutDayById,
+  findWorkoutDaysByPlan,
   findWorkoutPlanById,
   findWorkoutPlansByTrainer,
-  updateWorkoutPlan,
-  deleteWorkoutPlan,
-  addWorkoutDay,
-  findWorkoutDaysByPlan,
-  findWorkoutDayById,
   updateWorkoutDay,
-  deleteWorkoutDay,
-  addExerciseToWorkoutDay,
   updateWorkoutDayExercise,
-  deleteWorkoutDayExercise,
+  updateWorkoutPlan,
 } from '@/services/workout-plans';
 import {
-  CreateWorkoutPlanDto,
-  UpdateWorkoutPlanDto,
   CreateWorkoutDayDto,
   CreateWorkoutDayExerciseDto,
+  CreateWorkoutPlanDto,
   UpdateWorkoutDayExerciseDto,
-  WorkoutPlanWithDetails,
+  UpdateWorkoutPlanDto
 } from '@/types/workout-plans';
-import { WorkoutPlan, WorkoutDay, WorkoutDayExercise } from '@/types/entities';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 /* -------------------------------------------------------------------------- */
 /*                              Workout Plans                                 */

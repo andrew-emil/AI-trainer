@@ -1,59 +1,38 @@
-import { useParams } from 'react-router';
-import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import {
-  User,
-  Mail,
-  Calendar,
-  Target,
-  Ruler,
-  Weight,
-  Loader2,
-  TrendingUp,
-  ChevronLeft,
-  Scale,
-  Flame,
-} from 'lucide-react';
-import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import EgyptianCard from '@/components/ui/EgyptianCard';
 import EgyptianDivider from '@/components/ui/EgyptianDivider';
 import { Button } from '@/components/ui/button';
-import { findTraineeById } from '@/services/trainee';
-import { TraineeWithUser } from '@/types/trainer';
-import { toast } from 'sonner';
 import { useBodyWeightHistory } from '@/hooks/useBodyWeightLogs';
+import { findTraineeById, traineeQueryKeys } from '@/services/trainee';
+import { useQuery } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
+import {
+  Calendar,
+  ChevronLeft,
+  Flame,
+  Loader2,
+  Mail,
+  Ruler,
+  Scale,
+  Target,
+  TrendingUp,
+  Weight
+} from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Link, useParams } from 'react-router';
 
 const TraineeDetail = () => {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
-  const [trainee, setTrainee] = useState<TraineeWithUser | null>(null);
-  const [loading, setLoading] = useState(true);
+
+  const { data: trainee, isPending: loading } = useQuery({
+    queryKey: traineeQueryKeys.detail(id || ''),
+    queryFn: () => findTraineeById(),
+  })
 
   const { data: weightLogs } = useBodyWeightHistory(trainee?.userId || '');
   const latestLog = weightLogs && weightLogs.length > 0 ? weightLogs[0] : null;
 
-  useEffect(() => {
-    const fetchTrainee = async () => {
-      if (!id) return;
-      setLoading(true);
-      try {
-        const { data, error } = await findTraineeById(id);
-        if (error) {
-          toast.error(error.message || t('traineeDetail.fetchError'));
-        } else if (data) {
-          setTrainee(data);
-        }
-      } catch (err) {
-        toast.error(t('traineeDetail.errorOccurred'));
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTrainee();
-  }, [id]);
 
   if (loading) {
     return (

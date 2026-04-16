@@ -101,6 +101,7 @@ const WorkoutSummaryChart = ({
                   orientation={isRTL ? 'right' : 'left'}
                 />
                 <Tooltip
+                  // eslint-disable-next-line react-hooks/static-components
                   content={<CustomTooltip />}
                   cursor={{ fill: 'hsl(var(--muted)/0.2)' }}
                 />
